@@ -3,7 +3,9 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const { Server } = require('socket.io');
+const { Pool } = require('pg');
 const { authMiddleware } = require('./src/helpers');
 
 const app = express();
@@ -42,7 +44,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
+async function runMigrations() {
+  if (!process.env.DATABASE_URL) return;
+  const migrationPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  try {
+    const schemaPath = path.join(__dirname, '../database/schema.sql');
+    if (fs.existsSync(schemaPath)) {
+      const sql = fs.readFileSync(schemaPath, 'utf8');
+      await migrationPool.query(sql);
+      console.log('Migraciones ejecutadas: esquema de base de datos creado/actualizado.');
+    }
+  } catch (err) {
+    console.log('Migración automática no disponible (las tablas podrían ya existir).', err.message);
+  } finally {
+    await migrationPool.end();
+  }
+}
+
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor de la Fabrica Durey escuchando en http://0.0.0.0:${PORT}`);
+runMigrations().then(() => {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor de la Fabrica Durey escuchando en http://0.0.0.0:${PORT}`);
+  });
 });
