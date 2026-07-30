@@ -3187,9 +3187,21 @@ function App() {
                                   className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-bold text-primary outline-none"
                                 >
                                   <option value="">-- Seleccionar SKU Destino --</option>
-                                  {backendState.planilla && backendState.planilla.map(m => (
-                                    <option key={m.codigo} value={m.codigo}>
-                                      {m.codigo} - {m.nombre_original} (S/ {m.precio_por_paquete ? m.precio_por_paquete.toFixed(2) : '0.00'}/paq)
+                                  {((backendState.planilla && backendState.planilla.length > 0) 
+                                    ? backendState.planilla 
+                                    : (backendState.modelos && backendState.modelos.length > 0 
+                                        ? backendState.modelos.map(mod => ({ codigo: mod.sku, nombre_original: `${mod.categoria || ''} ${mod.diseno || ''}`, precio_por_paquete: mod.precio_venta })) 
+                                        : [
+                                            { codigo: 'VAR-MED-ALG-01', nombre_original: 'Varón Medio Algodón Clásico', precio_por_paquete: 25.00 },
+                                            { codigo: 'VAR-COR-DEP-02', nombre_original: 'Varón Corto Deportivo', precio_por_paquete: 22.00 },
+                                            { codigo: 'DAM-UNI-BAS-01', nombre_original: 'Dama Tobillera Básica', precio_por_paquete: 20.00 },
+                                            { codigo: 'NIN-ENT-DEL-04', nombre_original: 'Niño Escolar Delgado', precio_por_paquete: 18.00 },
+                                            { codigo: 'CAB-EXT-RAY-02', nombre_original: 'Caballero Extra Rayado', precio_por_paquete: 28.00 }
+                                          ]
+                                      )
+                                  ).map(m => (
+                                    <option key={m.codigo || m.sku} value={m.codigo || m.sku}>
+                                      {m.codigo || m.sku} - {m.nombre_original || m.diseno || m.sku} (S/ {m.precio_por_paquete ? Number(m.precio_por_paquete).toFixed(2) : (m.precio_venta ? Number(m.precio_venta).toFixed(2) : '0.00')}/paq)
                                     </option>
                                   ))}
                                 </select>
