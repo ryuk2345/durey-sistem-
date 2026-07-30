@@ -2751,9 +2751,11 @@ function App() {
                           const totalProduccionDocenas = totalNinos + totalDamas + totalFutbol + totalPlanchadoNormal + totalPlanchadoFutbol;
 
                           // Pago total
-                          const pagoCostura = (totalNinos * op.tarifas.ninos) + (totalDamas * op.tarifas.damas) + (totalFutbol * op.tarifas.futbol);
-                          const pagoPlanchado = (totalPlanchadoNormal * op.tarifas.planchadoNormal) + (totalPlanchadoFutbol * op.tarifas.planchadoFutbol);
-                          const pagoTotal = pagoCostura + pagoPlanchado;
+                          const tariffs = op.tarifas || { ninos: op.tarifa || 0.50, damas: op.tarifa || 0.50, futbol: (op.tarifa || 0.50) + 0.10, planchadoNormal: 0.30, planchadoFutbol: 0.40 };
+                          const opRol = op.rol || (op.tipo_contrato === 'jornal' ? 'Operario - Jornal' : 'Operario - Destajo');
+                          const pagoCostura = (totalNinos * (tariffs.ninos || 0)) + (totalDamas * (tariffs.damas || 0)) + (totalFutbol * (tariffs.futbol || 0));
+                          const pagoPlanchado = (totalPlanchadoNormal * (tariffs.planchadoNormal || 0)) + (totalPlanchadoFutbol * (tariffs.planchadoFutbol || 0));
+                          const pagoTotal = (op.tipo_contrato === 'jornal' || op.es_sueldo_fijo) ? (op.tarifa || 50.00) : (pagoCostura + pagoPlanchado);
 
                           return (
                             <tr
@@ -2765,12 +2767,12 @@ function App() {
                             >
                               <td className="p-3">
                                 <div className="font-semibold text-on-surface">{op.nombre}</div>
-                                <div className="text-[10px] text-on-surface-variant font-medium">{op.rol}</div>
+                                <div className="text-[10px] text-on-surface-variant font-medium">{opRol}</div>
                               </td>
                               
                               {/* Días Lunes a Sábado */}
                               {['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'].map(dia => {
-                                const reg = op.registroDias[dia] || { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 0, planchadoFutbol: 0 };
+                                const reg = (op.registroDias && op.registroDias[dia]) || { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 0, planchadoFutbol: 0 };
                                 const totalDia = (reg.ninos || 0) + (reg.damas || 0) + (reg.futbol || 0) + (reg.planchadoNormal || 0) + (reg.planchadoFutbol || 0);
                                 return (
                                   <td key={dia} className="p-2 text-center font-mono font-semibold text-on-surface-variant">
@@ -2789,7 +2791,7 @@ function App() {
                               <td className="p-3 text-right font-mono text-secondary">
                                 <div className="font-bold">{totalProduccionDocenas} doc.</div>
                                 <div className="text-[9px] text-outline">
-                                  {op.rol.includes('Costura') ? (
+                                  {opRol.includes('Costura') || opRol.includes('Destajo') ? (
                                     <span>N:{totalNinos} | D:{totalDamas} | F:{totalFutbol}</span>
                                   ) : (
                                     <span>Nrm:{totalPlanchadoNormal} | Fut:{totalPlanchadoFutbol}</span>
@@ -2798,8 +2800,8 @@ function App() {
                               </td>
 
                               {/* Total Pago */}
-                              <td className="p-3 text-right font-mono font-bold text-emerald-700 bg-emerald-50/20">
-                                S/ {pagoTotal.toFixed(2)}
+                              <td className="p-3 text-right font-mono font-bold text-primary">
+                                S/ {Number(pagoTotal || 0).toFixed(2)}
                               </td>
                             </tr>
                           );
@@ -2808,88 +2810,102 @@ function App() {
                     </table>
                   </div>
 
-                  {/* Panel de Configuración a la derecha (col-span-4) */}
-                  {(() => {
-                    const opSeleccionado = reportePersonal.find(op => op.id === selectedOperarioIdReporte) || reportePersonal[0];
-                    if (!opSeleccionado) return null;
+                  {/* Panel Lateral: Detalle del Operario Seleccionado */}
+                  {reportePersonal.find(op => op.id === selectedOperarioIdReporte) && (() => {
+                    const opSeleccionado = reportePersonal.find(op => op.id === selectedOperarioIdReporte);
+                    const selTarifas = opSeleccionado.tarifas || { ninos: opSeleccionado.tarifa || 0.50, damas: opSeleccionado.tarifa || 0.50, futbol: (opSeleccionado.tarifa || 0.50) + 0.10, planchadoNormal: 0.30, planchadoFutbol: 0.40 };
+                    const selRol = opSeleccionado.rol || (opSeleccionado.tipo_contrato === 'jornal' ? 'Operario - Jornal' : 'Operario - Destajo');
+                    
+                    const handleUpdateField = (field, val) => {
+                      const numericValue = Math.max(0, parseInt(val) || 0);
+                      setReportePersonal(prev => prev.map(op => {
+                        if (op.id === opSeleccionado.id) {
+                          return {
+                            ...op,
+                            registroDias: {
+                              ...op.registroDias,
+                              [diaSeleccionadoReporte]: {
+                                ...((op.registroDias && op.registroDias[diaSeleccionadoReporte]) || { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 0, planchadoFutbol: 0 }),
+                                [field]: numericValue
+                              }
+                            }
+                          };
+                        }
+                        return op;
+                      }));
+                    };
 
                     return (
-                      <div className="xl:col-span-4 bg-surface-container-low border border-outline-variant p-4 rounded-xl space-y-4 shadow-sm flex flex-col justify-between">
+                      <div className="xl:col-span-4 bg-surface-container-low p-4 rounded-xl border border-outline-variant flex flex-col justify-between">
                         <div>
-                          <div className="flex justify-between items-center pb-2 border-b border-outline-variant">
-                            <h4 className="font-bold text-xs text-primary uppercase tracking-wider">
-                              Editar Producción: {opSeleccionado.nombre}
-                            </h4>
-                            <span className="bg-primary/10 text-primary text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">
-                              {opSeleccionado.rol.includes('Costura') ? 'Costura' : 'Planchado'}
+                          <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
+                            <div>
+                              <h4 className="font-bold text-sm text-on-surface">{opSeleccionado.nombre}</h4>
+                              <p className="text-[11px] text-on-surface-variant font-medium">{selRol}</p>
+                            </div>
+                            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                              ID: #{opSeleccionado.id}
                             </span>
                           </div>
 
-                          <p className="text-[10px] text-on-surface-variant mt-2 mb-4 leading-relaxed">
-                            Configure las docenas de medias de este operario por día de la semana.
-                          </p>
+                          {/* Selección de Día para Registrar Producción */}
+                          <div className="mt-4 space-y-3">
+                            <label className="text-[11px] font-bold text-secondary uppercase tracking-wider block">Registrar Día de Producción</label>
+                            
+                            <div className="flex gap-1 overflow-x-auto pb-1">
+                              {['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'].map(dia => (
+                                <button
+                                  key={dia}
+                                  onClick={() => setDiaSeleccionadoReporte(dia)}
+                                  className={`px-2 py-1 text-[10px] font-bold rounded transition-colors whitespace-nowrap ${
+                                    diaSeleccionadoReporte === dia ? 'bg-primary text-on-primary' : 'bg-surface border border-outline-variant text-on-surface-variant'
+                                  }`}
+                                >
+                                  {dia.substring(0, 3)}
+                                </button>
+                              ))}
+                            </div>
 
-                          {/* Selector de Día */}
-                          <div className="space-y-4 font-sans text-xs">
-                            {['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'].map(dia => {
-                              const reg = opSeleccionado.registroDias[dia] || { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 0, planchadoFutbol: 0 };
-                              
-                              const handleUpdateField = (field, val) => {
-                                const numericValue = Math.max(0, parseInt(val) || 0);
-                                setReportePersonal(prev => prev.map(op => {
-                                  if (op.id === opSeleccionado.id) {
-                                    return {
-                                      ...op,
-                                      registroDias: {
-                                        ...op.registroDias,
-                                        [dia]: {
-                                          ...op.registroDias[dia],
-                                          [field]: numericValue
-                                        }
-                                      }
-                                    };
-                                  }
-                                  return op;
-                                }));
-                              };
-
+                            {/* Inputs según el día seleccionado */}
+                            {(() => {
+                              const reg = (opSeleccionado.registroDias && opSeleccionado.registroDias[diaSeleccionadoReporte]) || { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 0, planchadoFutbol: 0 };
                               return (
-                                <div key={dia} className="bg-white border border-outline-variant p-3 rounded-lg space-y-2">
-                                  <div className="flex justify-between items-center">
-                                    <span className="font-bold text-secondary uppercase text-[10px] tracking-wider">{dia}</span>
+                                <div className="bg-surface p-3 rounded-lg border border-outline-variant space-y-3">
+                                  <div className="flex justify-between items-center pb-2 border-b border-outline-variant">
+                                    <span className="font-bold text-xs text-primary">{diaSeleccionadoReporte}</span>
                                     <span className="text-[10px] font-mono text-outline font-bold">
                                       Total: {(reg.ninos || 0) + (reg.damas || 0) + (reg.futbol || 0) + (reg.planchadoNormal || 0) + (reg.planchadoFutbol || 0)} doc
                                     </span>
                                   </div>
 
-                                  {opSeleccionado.rol.includes('Costura') ? (
+                                  {selRol.includes('Costura') || selRol.includes('Destajo') ? (
                                     /* Costura: 3 tipos de medias y sus tarifas */
                                     <div className="grid grid-cols-3 gap-2">
                                       <div>
-                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Niños (S/ {opSeleccionado.tarifas.ninos.toFixed(2)})</label>
+                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Niños (S/ {Number(selTarifas.ninos || 0).toFixed(2)})</label>
                                         <input
                                           type="number"
-                                          value={reg.ninos}
+                                          value={reg.ninos || 0}
                                           onChange={(e) => handleUpdateField('ninos', e.target.value)}
                                           className="w-full p-1.5 border border-outline-variant rounded bg-surface font-mono font-bold text-center text-xs"
                                           min="0"
                                         />
                                       </div>
                                       <div>
-                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Damas (S/ {opSeleccionado.tarifas.damas.toFixed(2)})</label>
+                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Damas (S/ {Number(selTarifas.damas || 0).toFixed(2)})</label>
                                         <input
                                           type="number"
-                                          value={reg.damas}
+                                          value={reg.damas || 0}
                                           onChange={(e) => handleUpdateField('damas', e.target.value)}
                                           className="w-full p-1.5 border border-outline-variant rounded bg-surface font-mono font-bold text-center text-xs"
                                           min="0"
                                         />
                                       </div>
                                       <div>
-                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Fútbol (S/ {opSeleccionado.tarifas.futbol.toFixed(2)})</label>
+                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Fútbol (S/ {Number(selTarifas.futbol || 0).toFixed(2)})</label>
                                         <input
                                           type="number"
-                                          value={reg.futbol}
+                                          value={reg.futbol || 0}
                                           onChange={(e) => handleUpdateField('futbol', e.target.value)}
                                           className="w-full p-1.5 border border-outline-variant rounded bg-surface font-mono font-bold text-center text-xs"
                                           min="0"
@@ -2900,20 +2916,20 @@ function App() {
                                     /* Planchado: 2 tipos de medias (Normal y Fútbol) */
                                     <div className="grid grid-cols-2 gap-2">
                                       <div>
-                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Media Normal (S/ {opSeleccionado.tarifas.planchadoNormal.toFixed(2)})</label>
+                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Media Normal (S/ {Number(selTarifas.planchadoNormal || 0).toFixed(2)})</label>
                                         <input
                                           type="number"
-                                          value={reg.planchadoNormal}
+                                          value={reg.planchadoNormal || 0}
                                           onChange={(e) => handleUpdateField('planchadoNormal', e.target.value)}
                                           className="w-full p-1.5 border border-outline-variant rounded bg-surface font-mono font-bold text-center text-xs"
                                           min="0"
                                         />
                                       </div>
                                       <div>
-                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Media Fútbol (S/ {opSeleccionado.tarifas.planchadoFutbol.toFixed(2)})</label>
+                                        <label className="text-[9px] font-bold text-on-surface-variant block mb-1">Media Fútbol (S/ {Number(selTarifas.planchadoFutbol || 0).toFixed(2)})</label>
                                         <input
                                           type="number"
-                                          value={reg.planchadoFutbol}
+                                          value={reg.planchadoFutbol || 0}
                                           onChange={(e) => handleUpdateField('planchadoFutbol', e.target.value)}
                                           className="w-full p-1.5 border border-outline-variant rounded bg-surface font-mono font-bold text-center text-xs"
                                           min="0"
@@ -2923,25 +2939,25 @@ function App() {
                                   )}
                                 </div>
                               );
-                            })}
+                            })()}
                           </div>
-                        </div>
 
-                        {/* Tarifas Informativas */}
-                        <div className="mt-4 p-3 bg-white border border-outline-variant rounded-lg space-y-2 text-[10px]">
-                          <span className="font-bold text-secondary uppercase block tracking-wider">Tarifas por docena:</span>
-                          {opSeleccionado.rol.includes('Costura') ? (
-                            <div className="grid grid-cols-3 gap-1 text-center font-mono font-bold">
-                              <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Niños: S/ {opSeleccionado.tarifas.ninos.toFixed(2)}</div>
-                              <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Damas: S/ {opSeleccionado.tarifas.damas.toFixed(2)}</div>
-                              <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Fútbol: S/ {opSeleccionado.tarifas.futbol.toFixed(2)}</div>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-2 gap-1 text-center font-mono font-bold">
-                              <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Normal: S/ {opSeleccionado.tarifas.planchadoNormal.toFixed(2)}</div>
-                              <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Fútbol: S/ {opSeleccionado.tarifas.planchadoFutbol.toFixed(2)}</div>
-                            </div>
-                          )}
+                          {/* Tarifas Informativas */}
+                          <div className="mt-4 p-3 bg-white border border-outline-variant rounded-lg space-y-2 text-[10px]">
+                            <span className="font-bold text-secondary uppercase block tracking-wider">Tarifas por docena:</span>
+                            {selRol.includes('Costura') || selRol.includes('Destajo') ? (
+                              <div className="grid grid-cols-3 gap-1 text-center font-mono font-bold">
+                                <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Niños: S/ {Number(selTarifas.ninos || 0).toFixed(2)}</div>
+                                <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Damas: S/ {Number(selTarifas.damas || 0).toFixed(2)}</div>
+                                <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Fútbol: S/ {Number(selTarifas.futbol || 0).toFixed(2)}</div>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 gap-1 text-center font-mono font-bold">
+                                <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Normal: S/ {Number(selTarifas.planchadoNormal || 0).toFixed(2)}</div>
+                                <div className="bg-surface-container-low p-1 rounded border border-outline-variant/50">Fútbol: S/ {Number(selTarifas.planchadoFutbol || 0).toFixed(2)}</div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
