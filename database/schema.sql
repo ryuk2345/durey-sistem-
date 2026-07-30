@@ -240,10 +240,10 @@ CREATE TABLE IF NOT EXISTS planilla_inventario (
 );
 
 -- ============================================================
--- DATOS INICIALES (seeds)
+-- DATOS INICIALES (Estructura base sin datos de prueba)
 -- ============================================================
 
--- Usuarios
+-- Usuarios del sistema
 INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES
     ('admin',      'admin123', 'Administrador General',    'admin'),
     ('supervisor', 'super123', 'Supervisor de Planta',     'supervisor'),
@@ -251,78 +251,27 @@ INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES
     ('almacenero', 'alma123',  'Encargado de Almacen',     'almacenero')
 ON CONFLICT (username) DO NOTHING;
 
--- Operarios
-INSERT INTO operarios (id, nombre, tipo_contrato, tarifa, es_sueldo_fijo, modalidad, docenas_remalladas, total_liquidado) VALUES
-    (1, 'María Quispe',  'destajo', 2.50, FALSE, 'A Destajo (Produccion)', 144, 360.00),
-    (2, 'Juan Huamán',   'destajo', 2.80, FALSE, 'A Destajo (Produccion)',  80, 224.00),
-    (3, 'Ana Ramos',     'destajo', 2.50, FALSE, 'A Destajo (Produccion)', 120, 300.00),
-    (4, 'Carlos Torres', 'jornal',  50.00, TRUE, 'Sueldo Fijo (Jornal)',     0, 250.00),
-    (5, 'Sofía Milla',   'jornal',  55.00, TRUE, 'Sueldo Fijo (Jornal)',     0, 275.00)
-ON CONFLICT DO NOTHING;
-
--- Maquinas tejedoras (M-01 a M-64)
-INSERT INTO maquinas (id, tipo, estado, encargado_id) VALUES
-    ('M-01', 'tejido', 'Tejiendo',  4),
-    ('M-02', 'tejido', 'Tejiendo',  5),
-    ('M-03', 'tejido', 'Averiada',  NULL)
-ON CONFLICT (id) DO NOTHING;
-
--- Maquinas M-04 a M-64 (Inactivas)
+-- Maquinas tejedoras M-01 a M-64 (Inactivas sin operario)
 DO $$
 BEGIN
-    FOR i IN 4..64 LOOP
+    FOR i IN 1..64 LOOP
         INSERT INTO maquinas (id, tipo, estado)
         VALUES ('M-' || LPAD(i::TEXT, 2, '0'), 'tejido', 'Inactiva')
         ON CONFLICT (id) DO NOTHING;
     END LOOP;
 END $$;
 
--- Remalladoras
-INSERT INTO maquinas (id, tipo, estado, encargado_id) VALUES
-    ('REM-01', 'remalladora', 'Activa', 1),
-    ('REM-02', 'remalladora', 'Activa', 2)
+-- Remalladoras (Inactivas sin operario)
+INSERT INTO maquinas (id, tipo, estado) VALUES
+    ('REM-01', 'remalladora', 'Inactiva'),
+    ('REM-02', 'remalladora', 'Inactiva')
 ON CONFLICT (id) DO NOTHING;
 
--- Inventario de hilo
-INSERT INTO inventario_hilo (color, material, stock_cajas, stock_kg, umbral_minimo) VALUES
-    ('Blanco', 'Algodón Peinado', 15, 360.0, 3),
-    ('Negro',  'Algodón Peinado', 12, 288.0, 3),
-    ('Gris',   'Poliéster',        8, 192.0, 2),
-    ('Azul',   'Nylon',            5, 120.0, 1)
-ON CONFLICT (color, material) DO NOTHING;
-
--- Proveedores de hilo
-INSERT INTO proveedores_hilo (nombre, ruc, telefono, contacto, direccion, tipos_hilo) VALUES
-    ('Hilados del Sur S.A.C.',   '20551234567', '987654321', 'Eduardo Gómez', 'Av. Industrial 450, Lima',       'Algodón Peinado, Poliéster'),
-    ('Textiles Gamarra Yarn',    '20498765432', '912345678', 'Rosa Milla',    'Jr. Gamarra 1020, La Victoria',  'Nylon, Elastano')
-ON CONFLICT DO NOTHING;
-
--- Salones de almacen
+-- Salones de almacen (Capacidad vacia a cero)
 INSERT INTO salones (id, capacidad_maxima_bultos, bultos_actuales) VALUES
-    ('Salon A',        50,   1),
-    ('Salon B',        50,   1),
+    ('Salon A',        50,   0),
+    ('Salon B',        50,   0),
     ('Salon C',        40,   0),
     ('Almacen General',1000, 0)
 ON CONFLICT (id) DO NOTHING;
 
--- Planilla de inventario inicial
-INSERT INTO planilla_inventario (codigo, descripcion, salon, inicial, stock) VALUES
-    ('A101', 'Damas - Color Entero - Delgada',          'Salon A', 20,  30),
-    ('A103', 'Ninos - Con Diseno - Delgada',             'Salon A', 10,  10),
-    ('A105', 'Ninos - Color Entero - Delgada (Blanco)',  'Salon A', 50, 100),
-    ('A109', 'Damas - Con Diseno - Delgada (Gris)',      'Salon A', 15,  15),
-    ('B117', 'Adultos - Color Entero - Delgada (Negro)', 'Salon B', 80,  80),
-    ('B120', 'Futbol - Con Diseno - Delgada',            'Salon B', 45,  45)
-ON CONFLICT (salon, codigo) DO NOTHING;
-
--- Clientes de ejemplo
-INSERT INTO clientes (tipo_documento, numero_documento, nombre_cliente, cuotas_vencidas, telefono, direccion) VALUES
-    ('RUC', '20601234567', 'Distribuidora Gamarra S.A.',    0, '987654321',  'Jr. Gamarra 820, La Victoria'),
-    ('RUC', '20100123456', 'Tiendas Ripley Perú S.A.',      2, '016104000',  'Av. Paseo de la República 3220, San Isidro'),
-    ('RUC', '10405060708', 'Durey Trujillo Distribuciones', 0, '944888333',  'Av. España 450, Trujillo')
-ON CONFLICT (numero_documento) DO NOTHING;
-
--- Ordenes de compra de ejemplo
-INSERT INTO ordenes_compra (proveedor, material, cantidad_kg, estado) VALUES
-    ('Hilados Perú SAC', 'Algodón Peinado', 200.00, 'Pendiente')
-ON CONFLICT DO NOTHING;
