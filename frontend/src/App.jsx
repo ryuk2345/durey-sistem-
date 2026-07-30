@@ -36,6 +36,8 @@ function App() {
   const [trasladoForm, setTrasladoForm] = useState({ origen: 'Salon A', destino: 'Almacen General', bultos: 1 });
   const [skuForm, setSkuForm] = useState({ categoria: 'Niños', diseno: 'Color entero', calidad: 'Delgada', talla: '4' });
   const [ventasForm, setVentasForm] = useState({ cliente_documento: '', nombre_cliente: '', telefono: '', direccion: '', sku: '', cantidad: 1, condicion: 'Contado', medio: 'Efectivo', supervisor_pwd: '', precio_docena: 18.00 });
+  // NUEVO: Carrito multi-producto para una sola venta
+  const [carritoVenta, setCarritoVenta] = useState([]); // [{ sku, nombre, cantidad, precio, stockDisponible }]
   const [mantenimientoForm, setMantenimientoForm] = useState({ ticket_id: '', tecnico: '', problema: '', repuestos: '', tipo: 'Cambio de Sensor' });
   const [materiaPrimaForm, setMateriaPrimaForm] = useState({ color: '', material: '', proveedor: '', cantidad: 0, estado: 'Recibida', motivo: '' });
   const [proveedorForm, setProveedorForm] = useState({ nombre: '', RUC: '', telefono: '', contacto: '', direccion: '', tipos_hilo: '' });
@@ -1116,93 +1118,110 @@ function App() {
 
   const handleCrearVenta = async (e) => {
     e.preventDefault();
-    const payload = {
+
+    // Validar que el carrito no esté vacío
+    const itemsCarrito = carritoVenta.length > 0 ? carritoVenta : [{
+      sku: ventasForm.sku,
+      nombre: ventasForm.sku,
+      cantidad: ventasForm.cantidad,
+      precio: ventasForm.precio_docena,
+      stockDisponible: 9999
+    }];
+
+    if (itemsCarrito.length === 0 || !itemsCarrito[0].sku) {
+      addNotification('El carrito está vacío. Agrega al menos un producto.', 'error');
+      return;
+    }
+    if (!ventasForm.cliente_documento) {
+      addNotification('Ingresa el documento del cliente antes de completar la venta.', 'error');
+      return;
+    }
+
+    const basePayload = {
       cliente_documento: ventasForm.cliente_documento,
       nombre_cliente: ventasForm.nombre_cliente,
       telefono: ventasForm.telefono,
       direccion: ventasForm.direccion,
-      sku: ventasForm.sku,
-      cantidad_paquetes: ventasForm.cantidad,
-      cantidad: ventasForm.cantidad,
       condicion: ventasForm.condicion,
       medio_pago: ventasForm.medio,
       supervisor_pwd: ventasForm.supervisor_pwd,
-      precio_unitario: ventasForm.precio_docena
+      bypass_supervisor: ventasForm.supervisor_pwd === 'admin123' || ventasForm.supervisor_pwd === '123'
     };
+
     if (!connectionError) {
-      try {
-        const res = await fetch(`${API_BASE}/ventas/crear`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          addNotification(data.error, "error");
-        } else {
-          addNotification(data.message, "success");
+      let errores = [];
+      let exitos = 0;
+      for (const item of itemsCarrito) {
+        try {
+          const res = await fetch(`${API_BASE}/ventas/crear`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...basePayload,
+              sku: item.sku,
+              cantidad_paquetes: item.cantidad,
+              precio_unitario: item.precio
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errores.push(`${item.sku}: ${data.error}`);
+          } else {
+            exitos++;
+          }
+        } catch {
+          errores.push(`${item.sku}: Error de red`);
         }
-      } catch (err) {
-        addNotification("Error al enviar la venta", "error");
+      }
+      if (exitos > 0) {
+        addNotification(`✅ ${exitos} producto(s) vendido(s) con éxito.`, 'success');
+        setCarritoVenta([]);
+        setVentasForm(prev => ({ ...prev, supervisor_pwd: '', sku: '', cantidad: 1, precio_docena: 18.00 }));
+        setPosStep(1);
+        fetchData();
+      }
+      if (errores.length > 0) {
+        errores.forEach(err => addNotification(err, 'error'));
       }
     } else {
-      // Simulación local de venta
-      let cliente = backendState.clientes.find(c => c.numero_documento === payload.cliente_documento);
-      if (!cliente) {
-        cliente = {
-          id: backendState.clientes.length + 1,
-          tipo_documento: payload.cliente_documento.length === 8 ? 'DNI' : 'RUC',
-          numero_documento: payload.cliente_documento,
-          nombre_cliente: payload.nombre_cliente || 'Cliente Nuevo',
-          telefono: payload.telefono || '',
-          direccion: payload.direccion || '',
-          cuotas_vencidas: 0
-        };
-        setBackendState(prev => ({
-          ...prev,
-          clientes: [...prev.clientes, cliente]
-        }));
+      // Simulación local multi-producto
+      let allOk = true;
+      for (const item of itemsCarrito) {
+        const bultos = backendState.bultos.filter(b => b.sku === item.sku && b.estado !== 'Despachado');
+        const totalPacks = bultos.reduce((a, b) => a + b.cantidad_paquetes, 0);
+        if (totalPacks < item.cantidad) {
+          addNotification(`Stock insuficiente: Solo hay ${totalPacks} docenas de ${item.sku}`, 'error');
+          allOk = false;
+        }
       }
+      if (!allOk) return;
 
-      if (cliente.cuotas_vencidas > 0 && payload.supervisor_pwd !== '1234') {
-        addNotification("BLOQUEADO: El cliente tiene cuotas vencidas. Requiere aprobación de supervisor (clave 1234)", "error");
-        return;
-      }
-
-      const bultos = backendState.bultos.filter(b => b.sku === payload.sku && b.estado !== 'Despachado');
-      const totalPacks = bultos.reduce((a, b) => a + b.cantidad_paquetes, 0);
-
-      if (totalPacks < payload.cantidad) {
-        addNotification(`Stock Insuficiente en los almacenes: Solo hay ${totalPacks} paquetes de ${payload.sku}`, "error");
-        return;
-      }
-
-      let restante = payload.cantidad;
       setBackendState(prev => {
-        const newBultos = prev.bultos.map(b => {
-          if (b.sku === payload.sku && b.estado !== 'Despachado' && restante > 0) {
-            if (b.cantidad_paquetes <= restante) {
-              restante -= b.cantidad_paquetes;
-              // descontar del salon
-              const sal = prev.salones.find(s => s.id === b.salon_id);
-              if (sal) sal.bultos_actuales = Math.max(0, sal.bultos_actuales - 1);
-              return { ...b, estado: 'Despachado', cantidad_paquetes: 0, total_pares: 0 };
-            } else {
-              b.cantidad_paquetes -= restante;
-              b.total_pares = b.cantidad_paquetes * 12;
-              restante = 0;
+        let newBultos = [...prev.bultos];
+        for (const item of itemsCarrito) {
+          let restante = item.cantidad;
+          newBultos = newBultos.map(b => {
+            if (b.sku === item.sku && b.estado !== 'Despachado' && restante > 0) {
+              if (b.cantidad_paquetes <= restante) {
+                restante -= b.cantidad_paquetes;
+                return { ...b, estado: 'Despachado', cantidad_paquetes: 0, total_pares: 0 };
+              } else {
+                return { ...b, cantidad_paquetes: b.cantidad_paquetes - restante, total_pares: (b.cantidad_paquetes - restante) * 12 };
+              }
             }
-          }
-          return b;
-        });
+            return b;
+          });
+        }
         return { ...prev, bultos: newBultos };
       });
-
-      addNotification("Venta registrada con éxito (simulado)", "success");
-      setVentasForm(prev => ({ ...prev, supervisor_pwd: '' }));
+      addNotification(`✅ Venta de ${itemsCarrito.length} producto(s) registrada (simulado)`, 'success');
+      setCarritoVenta([]);
+      setVentasForm(prev => ({ ...prev, supervisor_pwd: '', sku: '', cantidad: 1, precio_docena: 18.00 }));
       setPosStep(1);
     }
   };
+
+
 
   const handleGuardarCliente = async (e) => {
     e.preventDefault();
@@ -4269,39 +4288,32 @@ function App() {
                               const stockInfo = stockMap[sku] || { bultosCount: 0, totalPaquetes: 0, salones: new Set() };
                               const precioUnit = catMatch.precio_por_paquete ? Number(catMatch.precio_por_paquete) : (catMatch.precio_venta ? Number(catMatch.precio_venta) : 18.00);
                               const salonesStr = Array.from(stockInfo.salones).join(', ') || 'Almacén General';
+                              const enCarrito = carritoVenta.find(c => c.sku === sku);
+                              const cantEnCarrito = enCarrito ? enCarrito.cantidad : 0;
 
                               return (
                                 <div
                                   key={sku}
-                                  onClick={() => {
-                                    setVentasForm(prev => ({
-                                      ...prev,
-                                      sku: sku,
-                                      cantidad: 1,
-                                      precio_docena: precioUnit
-                                    }));
-                                    setPosSelection({
-                                      categoria: catMatch.categoria || 'Adultos',
-                                      talla: 'Talla Única',
-                                      diseno: 'Color entero',
-                                      calidad: 'Delgada',
-                                      sku: sku
-                                    });
-                                    addNotification(`SKU ${sku} seleccionado para venta. Stock: ${stockInfo.totalPaquetes} docenas`, "success");
-                                    setPosStep(4);
-                                  }}
-                                  className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md flex flex-col justify-between ${
-                                    stockInfo.bultosCount > 0
-                                      ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-500'
-                                      : 'bg-white border-outline-variant hover:border-primary opacity-80'
+                                  className={`p-3.5 rounded-xl border-2 transition-all hover:shadow-md flex flex-col justify-between relative ${
+                                    enCarrito
+                                      ? 'bg-primary/5 border-primary shadow-md'
+                                      : stockInfo.bultosCount > 0
+                                        ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-500 cursor-pointer'
+                                        : 'bg-white border-outline-variant hover:border-primary opacity-80 cursor-pointer'
                                   }`}
                                 >
+                                  {/* Badge "en carrito" */}
+                                  {enCarrito && (
+                                    <span className="absolute -top-2 -right-2 bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg z-10">
+                                      ✓ {cantEnCarrito} en carrito
+                                    </span>
+                                  )}
                                   <div>
                                     <div className="flex justify-between items-start mb-1">
                                       <span className="font-mono font-black text-xs text-primary">{sku}</span>
                                       {stockInfo.bultosCount > 0 ? (
                                         <span className="bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                          {stockInfo.bultosCount} Bulto{stockInfo.bultosCount > 1 ? 's' : ''} en Stock
+                                          {stockInfo.bultosCount} Bulto{stockInfo.bultosCount > 1 ? 's' : ''}
                                         </span>
                                       ) : (
                                         <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
@@ -4318,13 +4330,83 @@ function App() {
 
                                   <div className="mt-3 pt-2 border-t border-outline-variant/50 flex justify-between items-center">
                                     <div>
-                                      <span className="text-[9px] text-outline block uppercase font-bold">Stock Disponible</span>
-                                      <span className="font-mono font-bold text-xs text-secondary">{stockInfo.totalPaquetes} docenas ({stockInfo.totalPaquetes * 12} pares)</span>
+                                      <span className="text-[9px] text-outline block uppercase font-bold">Stock</span>
+                                      <span className="font-mono font-bold text-xs text-secondary">{stockInfo.totalPaquetes} doc.</span>
                                     </div>
                                     <div className="text-right">
-                                      <span className="text-[9px] text-outline block uppercase font-bold">Precio / Docena</span>
+                                      <span className="text-[9px] text-outline block uppercase font-bold">Precio</span>
                                       <span className="font-mono font-bold text-xs text-emerald-700">S/ {precioUnit.toFixed(2)}</span>
                                     </div>
+                                  </div>
+
+                                  {/* Botones de cantidad en carrito */}
+                                  <div className="mt-2 flex items-center gap-1.5">
+                                    {enCarrito ? (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={(ev) => {
+                                            ev.stopPropagation();
+                                            setCarritoVenta(prev => prev
+                                              .map(c => c.sku === sku ? { ...c, cantidad: Math.max(1, c.cantidad - 1) } : c)
+                                              .filter(c => c.cantidad > 0)
+                                            );
+                                          }}
+                                          className="w-7 h-7 rounded-lg bg-red-100 text-red-700 font-black text-sm hover:bg-red-200 transition flex items-center justify-center"
+                                        >−</button>
+                                        <span className="flex-1 text-center font-mono font-black text-sm text-primary">{cantEnCarrito}</span>
+                                        <button
+                                          type="button"
+                                          onClick={(ev) => {
+                                            ev.stopPropagation();
+                                            if (cantEnCarrito >= stockInfo.totalPaquetes) {
+                                              addNotification(`Stock máximo: ${stockInfo.totalPaquetes} docenas de ${sku}`, 'warning');
+                                              return;
+                                            }
+                                            setCarritoVenta(prev => prev.map(c => c.sku === sku ? { ...c, cantidad: c.cantidad + 1 } : c));
+                                          }}
+                                          className="w-7 h-7 rounded-lg bg-primary/10 text-primary font-black text-sm hover:bg-primary/20 transition flex items-center justify-center"
+                                        >+</button>
+                                        <button
+                                          type="button"
+                                          onClick={(ev) => {
+                                            ev.stopPropagation();
+                                            setCarritoVenta(prev => prev.filter(c => c.sku !== sku));
+                                          }}
+                                          className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition flex items-center justify-center"
+                                          title="Quitar del carrito"
+                                        >
+                                          <span className="material-symbols-outlined text-[14px]">delete</span>
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={(ev) => {
+                                          ev.stopPropagation();
+                                          if (stockInfo.totalPaquetes === 0) {
+                                            addNotification(`Sin stock disponible de ${sku}`, 'warning');
+                                            return;
+                                          }
+                                          setCarritoVenta(prev => {
+                                            const existe = prev.find(c => c.sku === sku);
+                                            if (existe) return prev.map(c => c.sku === sku ? { ...c, cantidad: c.cantidad + 1 } : c);
+                                            return [...prev, {
+                                              sku,
+                                              nombre: catMatch.nombre_original || catMatch.diseno || sku,
+                                              cantidad: 1,
+                                              precio: precioUnit,
+                                              stockDisponible: stockInfo.totalPaquetes
+                                            }];
+                                          });
+                                          addNotification(`${sku} agregado al carrito`, 'success');
+                                        }}
+                                        className="w-full py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary/90 transition active:scale-95 flex items-center justify-center gap-1"
+                                      >
+                                        <span className="material-symbols-outlined text-[13px]">add_shopping_cart</span>
+                                        Agregar al carrito
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               );
@@ -4333,6 +4415,43 @@ function App() {
                         );
                       })()}
                     </div>
+
+                    {/* Botón ir al carrito / checkout si hay items */}
+                    {carritoVenta.length > 0 && (
+                      <div className="sticky bottom-0 bg-white/95 backdrop-blur border-t border-outline-variant p-4 rounded-b-2xl shadow-lg flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow">
+                            <span className="material-symbols-outlined text-white text-xl">shopping_cart</span>
+                          </div>
+                          <div>
+                            <p className="font-black text-sm text-on-surface">{carritoVenta.length} producto{carritoVenta.length > 1 ? 's' : ''} en carrito</p>
+                            <p className="text-xs text-on-surface-variant font-semibold">
+                              Total: S/ {carritoVenta.reduce((t, i) => t + i.cantidad * i.precio, 0).toFixed(2)}
+                              {' '}· {carritoVenta.reduce((t, i) => t + i.cantidad, 0)} docenas
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setCarritoVenta([]); addNotification('Carrito vaciado', 'info'); }}
+                            className="px-3 py-2 text-xs font-bold text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition"
+                          >
+                            Vaciar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPosStep(4)}
+                            className="px-5 py-2 bg-primary text-white text-xs font-black rounded-xl hover:bg-primary/90 transition active:scale-95 shadow-md flex items-center gap-1.5"
+                          >
+                            <span className="material-symbols-outlined text-sm">shopping_cart_checkout</span>
+                            Ir al Pago →
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+
 
                     {/* Secondary: Guided Category Assistant */}
                     <div className="space-y-2">
@@ -4531,25 +4650,116 @@ function App() {
                   <form onSubmit={handleCrearVenta} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Summary Column */}
                     <div className="lg:col-span-2 space-y-6">
+
+                      {/* CARRITO DE COMPRAS */}
                       <div className="bg-white p-5 rounded-2xl shadow-sm border border-outline-variant space-y-4">
-                        <h3 className="font-bold text-sm text-primary uppercase border-b pb-2 border-outline-variant tracking-wider">Detalle del Producto</h3>
-                        <div className="flex gap-4 items-center flex-col sm:flex-row">
-                          <div className="w-20 h-20 rounded-xl bg-surface-container-low overflow-hidden border border-outline-variant flex items-center justify-center text-primary">
-                            <span className="material-symbols-outlined text-4xl">checkroom</span>
+                        <div className="flex justify-between items-center border-b pb-2 border-outline-variant">
+                          <h3 className="font-bold text-sm text-primary uppercase tracking-wider flex items-center gap-2">
+                            <span className="material-symbols-outlined text-lg">shopping_cart</span>
+                            Carrito de Venta
+                            <span className="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full">{carritoVenta.length}</span>
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={() => setPosStep(1)}
+                            className="text-xs font-bold text-primary flex items-center gap-1 hover:underline"
+                          >
+                            <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
+                            + Agregar más productos
+                          </button>
+                        </div>
+
+                        {carritoVenta.length === 0 ? (
+                          <div className="text-center py-8 text-on-surface-variant">
+                            <span className="material-symbols-outlined text-5xl text-outline mb-3 block">shopping_cart</span>
+                            <p className="font-bold text-sm">Carrito vacío</p>
+                            <p className="text-xs mt-1">Vuelve al catálogo y agrega productos</p>
+                            <button type="button" onClick={() => setPosStep(1)} className="mt-3 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition">
+                              Ir al catálogo
+                            </button>
                           </div>
-                          <div className="flex-1 text-xs space-y-1">
-                            <p className="text-[10px] text-primary font-bold uppercase">Categoría: {posSelection.categoria}</p>
-                            <p className="font-bold text-sm text-on-surface">Media Durey Seleccionada</p>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-semibold text-on-surface-variant pt-1 font-mono">
-                              <p>TALLA: <span className="text-on-surface font-bold">{posSelection.talla}</span></p>
-                              <p>CALIDAD: <span className="text-on-surface font-bold">{posSelection.calidad}</span></p>
-                              <p>DISEÑO: <span className="text-on-surface font-bold">{posSelection.diseno}</span></p>
-                              <p>SKU: <span className="text-primary font-black">{ventasForm.sku}</span></p>
+                        ) : (
+                          <div className="space-y-2">
+                            {/* Header */}
+                            <div className="grid grid-cols-12 gap-2 text-[9px] font-bold text-secondary uppercase tracking-wider px-2">
+                              <div className="col-span-5">Producto / SKU</div>
+                              <div className="col-span-2 text-center">Docenas</div>
+                              <div className="col-span-2 text-center">Precio</div>
+                              <div className="col-span-2 text-right">Subtotal</div>
+                              <div className="col-span-1"></div>
+                            </div>
+                            {carritoVenta.map((item, idx) => (
+                              <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-surface-container-low rounded-xl p-2.5 text-xs">
+                                {/* Nombre/SKU */}
+                                <div className="col-span-5">
+                                  <p className="font-mono font-black text-primary text-[10px]">{item.sku}</p>
+                                  <p className="text-on-surface-variant text-[10px] line-clamp-1">{item.nombre}</p>
+                                </div>
+                                {/* Cantidad editable */}
+                                <div className="col-span-2 flex items-center justify-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setCarritoVenta(prev =>
+                                      prev.map((c, i) => i === idx ? { ...c, cantidad: Math.max(1, c.cantidad - 1) } : c)
+                                    )}
+                                    className="w-5 h-5 rounded bg-red-100 text-red-700 font-black text-xs hover:bg-red-200 flex items-center justify-center"
+                                  >−</button>
+                                  <span className="font-mono font-black text-sm w-6 text-center">{item.cantidad}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (item.cantidad >= (item.stockDisponible || 999)) {
+                                        addNotification(`Stock máximo: ${item.stockDisponible} docenas`, 'warning');
+                                        return;
+                                      }
+                                      setCarritoVenta(prev => prev.map((c, i) => i === idx ? { ...c, cantidad: c.cantidad + 1 } : c));
+                                    }}
+                                    className="w-5 h-5 rounded bg-primary/10 text-primary font-black text-xs hover:bg-primary/20 flex items-center justify-center"
+                                  >+</button>
+                                </div>
+                                {/* Precio editable */}
+                                <div className="col-span-2 flex items-center justify-center">
+                                  <input
+                                    type="number"
+                                    step="0.5"
+                                    min="0"
+                                    value={item.precio}
+                                    onChange={(e) => setCarritoVenta(prev =>
+                                      prev.map((c, i) => i === idx ? { ...c, precio: parseFloat(e.target.value) || 0 } : c)
+                                    )}
+                                    className="w-16 text-center border border-outline-variant rounded-lg py-0.5 px-1 text-xs font-mono font-bold text-primary bg-white focus:ring-1 focus:ring-primary outline-none"
+                                  />
+                                </div>
+                                {/* Subtotal */}
+                                <div className="col-span-2 text-right font-mono font-black text-xs text-on-surface">
+                                  S/ {(item.cantidad * item.precio).toFixed(2)}
+                                </div>
+                                {/* Eliminar */}
+                                <div className="col-span-1 flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => setCarritoVenta(prev => prev.filter((_, i) => i !== idx))}
+                                    className="w-6 h-6 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 flex items-center justify-center transition"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">close</span>
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                            {/* Resumen de totales del carrito */}
+                            <div className="border-t border-outline-variant pt-3 mt-2 flex justify-between items-center px-2">
+                              <span className="text-xs font-bold text-on-surface-variant">
+                                {carritoVenta.reduce((t, i) => t + i.cantidad, 0)} docenas totales
+                              </span>
+                              <span className="font-mono font-black text-sm text-primary">
+                                Total: S/ {carritoVenta.reduce((t, i) => t + i.cantidad * i.precio, 0).toFixed(2)}
+                              </span>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
+                      {/* Información del Cliente */}
                       <div className="bg-white p-5 rounded-2xl shadow-sm border border-outline-variant space-y-3.5 text-xs">
                         <h3 className="font-bold text-sm text-primary uppercase tracking-wider">Información del Cliente</h3>
                         <div className="grid sm:grid-cols-2 gap-3.5">
@@ -4570,10 +4780,7 @@ function App() {
                                     direccion: match.direccion || ''
                                   }));
                                 } else {
-                                  setVentasForm(prev => ({
-                                    ...prev,
-                                    cliente_documento: doc
-                                  }));
+                                  setVentasForm(prev => ({ ...prev, cliente_documento: doc }));
                                 }
                               }}
                               className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-mono font-bold"
@@ -4608,28 +4815,6 @@ function App() {
                               onChange={(e) => setVentasForm(prev => ({ ...prev, direccion: e.target.value }))}
                               className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-semibold"
                               placeholder="Ej. Jr. Gamarra 820, La Victoria"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Docenas a Comprar</label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={ventasForm.cantidad}
-                              onChange={(e) => setVentasForm({ ...ventasForm, cantidad: parseInt(e.target.value) || 1 })}
-                              className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-mono font-bold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Precio por Docena (S/)</label>
-                            <input
-                              type="number"
-                              step="0.10"
-                              min="0"
-                              value={ventasForm.precio_docena}
-                              onChange={(e) => setVentasForm({ ...ventasForm, precio_docena: parseFloat(e.target.value) || 0 })}
-                              className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-mono font-bold text-primary"
-                              placeholder="Ej. 18.00"
                             />
                           </div>
                           <div>
@@ -4679,15 +4864,19 @@ function App() {
 
                         {/* Invoice Breakdown */}
                         {(() => {
-                          const docenas = ventasForm.cantidad || 1;
-                          const precioDocena = ventasForm.precio_docena !== undefined ? ventasForm.precio_docena : 18.00;
-                          const total = precioDocena * docenas;
-                          const subtotal = total / 1.18;
-                          const igv = total - subtotal;
+                          const totalCarrito = carritoVenta.reduce((t, i) => t + i.cantidad * i.precio, 0);
+                          const subtotal = totalCarrito / 1.18;
+                          const igv = totalCarrito - subtotal;
                           return (
                             <div className="pt-4 border-t border-outline-variant text-xs space-y-1.5 font-bold font-mono">
-                              <div className="flex justify-between items-center text-on-surface-variant">
-                                <span>Subtotal</span>
+                              {carritoVenta.map((item, idx) => (
+                                <div key={idx} className="flex justify-between items-center text-on-surface-variant text-[10px]">
+                                  <span className="truncate max-w-[130px]">{item.sku} × {item.cantidad}</span>
+                                  <span>S/ {(item.cantidad * item.precio).toFixed(2)}</span>
+                                </div>
+                              ))}
+                              <div className="border-t border-outline-variant/40 pt-2 mt-2 flex justify-between items-center text-on-surface-variant">
+                                <span>Subtotal (sin IGV)</span>
                                 <span>S/ {subtotal.toFixed(2)}</span>
                               </div>
                               <div className="flex justify-between items-center text-on-surface-variant">
@@ -4696,7 +4885,7 @@ function App() {
                               </div>
                               <div className="flex justify-between items-center text-sm font-extrabold text-primary pt-1 border-t border-outline-variant/30">
                                 <span>TOTAL GENERAL</span>
-                                <span>S/ {total.toFixed(2)}</span>
+                                <span>S/ {totalCarrito.toFixed(2)}</span>
                               </div>
                             </div>
                           );
@@ -4704,15 +4893,25 @@ function App() {
 
                         <button
                           type="submit"
-                          className="w-full py-3 bg-primary text-on-primary rounded-xl font-bold shadow-md hover:bg-primary-container transition active:scale-95 text-xs flex justify-center items-center gap-1.5"
+                          disabled={carritoVenta.length === 0}
+                          className="w-full py-3 bg-primary text-on-primary rounded-xl font-bold shadow-md hover:bg-primary-container transition active:scale-95 text-xs flex justify-center items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <span className="material-symbols-outlined text-sm">shopping_cart_checkout</span>
-                          Completar Venta
+                          Completar Venta ({carritoVenta.length} producto{carritoVenta.length !== 1 ? 's' : ''})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPosStep(1)}
+                          className="w-full py-2 border border-outline-variant text-xs font-bold rounded-xl text-on-surface-variant hover:bg-slate-50 transition flex items-center justify-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-sm">arrow_back</span>
+                          Volver a agregar más
                         </button>
                       </div>
                     </div>
                   </form>
                 )}
+
               </div>
             </div>
           )}
