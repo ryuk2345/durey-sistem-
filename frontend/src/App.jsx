@@ -4213,36 +4213,159 @@ function App() {
 
               {/* POS Step Canvas */}
               <div className="max-w-4xl mx-auto">
-                {/* Step 1: Category Grid */}
+                {/* Step 1: Real Factory Inventory & Category Grid */}
                 {posStep === 1 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                    {[
-                      { id: 'Adultos', name: 'Adultos', icon: 'person', desc: 'Calcetines standard' },
-                      { id: 'Niños', name: 'Niños', icon: 'child_care', desc: 'Colección infantil' },
-                      { id: 'Bebes', name: 'Bebés', icon: 'baby_changing_station', desc: 'Prendas suaves' },
-                      { id: 'Damas', name: 'Damas', icon: 'woman', desc: 'Diseños de vestir' },
-                      { id: 'Fútbol', name: 'Fútbol', icon: 'sports_soccer', desc: 'Caña alta compresión' }
-                    ].map(cat => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          setPosSelection(prev => ({
-                            ...prev,
-                            categoria: cat.id,
-                            talla: cat.id === 'Damas' || cat.id === 'Adultos' ? 'Talla Única' : prev.talla
-                          }));
-                          setPosStep(2);
-                        }}
-                        className="group flex flex-col bg-white rounded-xl shadow-sm border border-outline-variant hover:border-primary hover:shadow-md transition-all p-4 items-center text-center cursor-pointer"
-                      >
-                        <div className="w-12 h-12 rounded-full bg-primary/5 text-primary flex items-center justify-center mb-3 group-hover:scale-110 transition duration-300">
-                          <span className="material-symbols-outlined text-2xl">{cat.icon}</span>
+                  <div className="space-y-6">
+                    {/* Real Inventory Stock Selector */}
+                    <div className="bg-white border border-outline-variant p-5 rounded-2xl shadow-sm space-y-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-outline-variant pb-3">
+                        <div>
+                          <h3 className="font-bold text-sm text-primary uppercase tracking-wider flex items-center gap-2">
+                            <span className="material-symbols-outlined text-lg">inventory_2</span>
+                            Stock Real de Productos Producidos en Fábrica
+                          </h3>
+                          <p className="text-xs text-on-surface-variant">
+                            Seleccione un SKU producido y empacado en almacén para cargar la boleta de venta directamente.
+                          </p>
                         </div>
-                        <span className="font-bold text-xs text-on-surface">{cat.name}</span>
-                        <span className="text-[10px] text-on-surface-variant font-medium mt-0.5">{cat.desc}</span>
-                      </button>
-                    ))}
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full font-mono">
+                          {(backendState.bultos || []).filter(b => b.estado !== 'Despachado').length} Bultos Listos
+                        </span>
+                      </div>
+
+                      {(() => {
+                        const activeBultos = (backendState.bultos || []).filter(b => b.estado !== 'Despachado');
+                        const stockMap = {};
+                        activeBultos.forEach(b => {
+                          if (!b.sku) return;
+                          if (!stockMap[b.sku]) {
+                            stockMap[b.sku] = { sku: b.sku, bultosCount: 0, totalPaquetes: 0, salones: new Set() };
+                          }
+                          stockMap[b.sku].bultosCount += 1;
+                          stockMap[b.sku].totalPaquetes += (b.cantidad_paquetes || 0);
+                          if (b.salon_id) stockMap[b.sku].salones.add(b.salon_id);
+                        });
+
+                        const catalogItems = (backendState.planilla && backendState.planilla.length > 0)
+                          ? backendState.planilla
+                          : [
+                              { codigo: 'VAR-MED-ALG-01', nombre_original: 'Varón Media Algodón Standard', precio_por_paquete: 18.00, categoria: 'Adultos' },
+                              { codigo: 'VAR-COR-DEP-02', nombre_original: 'Varón Corta Deportiva', precio_por_paquete: 22.00, categoria: 'Fútbol' },
+                              { codigo: 'DAM-UNI-BAS-01', nombre_original: 'Dama Única Básica', precio_por_paquete: 20.00, categoria: 'Damas' },
+                              { codigo: 'NIN-ENT-DEL-04', nombre_original: 'Niños Entero Delgado', precio_por_paquete: 16.00, categoria: 'Niños' },
+                              { codigo: 'CAB-EXT-RAY-02', nombre_original: 'Caballero Extra Rayado', precio_por_paquete: 28.00, categoria: 'Adultos' }
+                            ];
+
+                        const allSkus = new Set([
+                          ...catalogItems.map(m => m.codigo || m.sku),
+                          ...Object.keys(stockMap)
+                        ]);
+
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {Array.from(allSkus).map(sku => {
+                              const catMatch = catalogItems.find(m => (m.codigo || m.sku) === sku) || {};
+                              const stockInfo = stockMap[sku] || { bultosCount: 0, totalPaquetes: 0, salones: new Set() };
+                              const precioUnit = catMatch.precio_por_paquete ? Number(catMatch.precio_por_paquete) : (catMatch.precio_venta ? Number(catMatch.precio_venta) : 18.00);
+                              const salonesStr = Array.from(stockInfo.salones).join(', ') || 'Almacén General';
+
+                              return (
+                                <div
+                                  key={sku}
+                                  onClick={() => {
+                                    setVentasForm(prev => ({
+                                      ...prev,
+                                      sku: sku,
+                                      cantidad: 1,
+                                      precio_docena: precioUnit
+                                    }));
+                                    setPosSelection({
+                                      categoria: catMatch.categoria || 'Adultos',
+                                      talla: 'Talla Única',
+                                      diseno: 'Color entero',
+                                      calidad: 'Delgada',
+                                      sku: sku
+                                    });
+                                    addNotification(`SKU ${sku} seleccionado para venta. Stock: ${stockInfo.totalPaquetes} docenas`, "success");
+                                    setPosStep(4);
+                                  }}
+                                  className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md flex flex-col justify-between ${
+                                    stockInfo.bultosCount > 0
+                                      ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-500'
+                                      : 'bg-white border-outline-variant hover:border-primary opacity-80'
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="flex justify-between items-start mb-1">
+                                      <span className="font-mono font-black text-xs text-primary">{sku}</span>
+                                      {stockInfo.bultosCount > 0 ? (
+                                        <span className="bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                          {stockInfo.bultosCount} Bulto{stockInfo.bultosCount > 1 ? 's' : ''} en Stock
+                                        </span>
+                                      ) : (
+                                        <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                          Sin Bultos
+                                        </span>
+                                      )}
+                                    </div>
+                                    <h4 className="font-bold text-xs text-on-surface line-clamp-1">{catMatch.nombre_original || catMatch.diseno || 'Calcetines Producción Durey'}</h4>
+                                    <p className="text-[10px] text-on-surface-variant font-medium mt-0.5 flex items-center gap-1">
+                                      <span className="material-symbols-outlined text-[12px]">location_on</span>
+                                      {salonesStr}
+                                    </p>
+                                  </div>
+
+                                  <div className="mt-3 pt-2 border-t border-outline-variant/50 flex justify-between items-center">
+                                    <div>
+                                      <span className="text-[9px] text-outline block uppercase font-bold">Stock Disponible</span>
+                                      <span className="font-mono font-bold text-xs text-secondary">{stockInfo.totalPaquetes} docenas ({stockInfo.totalPaquetes * 12} pares)</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[9px] text-outline block uppercase font-bold">Precio / Docena</span>
+                                      <span className="font-mono font-bold text-xs text-emerald-700">S/ {precioUnit.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Secondary: Guided Category Assistant */}
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-xs text-secondary uppercase tracking-wider">O filtrar por Categoría General:</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        {[
+                          { id: 'Adultos', name: 'Adultos', icon: 'person', desc: 'Calcetines standard' },
+                          { id: 'Niños', name: 'Niños', icon: 'child_care', desc: 'Colección infantil' },
+                          { id: 'Bebes', name: 'Bebés', icon: 'baby_changing_station', desc: 'Prendas suaves' },
+                          { id: 'Damas', name: 'Damas', icon: 'woman', desc: 'Diseños de vestir' },
+                          { id: 'Fútbol', name: 'Fútbol', icon: 'sports_soccer', desc: 'Caña alta compresión' }
+                        ].map(cat => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              setPosSelection(prev => ({
+                                ...prev,
+                                categoria: cat.id,
+                                talla: cat.id === 'Damas' || cat.id === 'Adultos' ? 'Talla Única' : prev.talla
+                              }));
+                              setPosStep(2);
+                            }}
+                            className="group flex flex-col bg-white rounded-xl shadow-sm border border-outline-variant hover:border-primary hover:shadow-md transition-all p-3 items-center text-center cursor-pointer"
+                          >
+                            <div className="w-9 h-9 rounded-full bg-primary/5 text-primary flex items-center justify-center mb-1.5 group-hover:scale-110 transition duration-300">
+                              <span className="material-symbols-outlined text-xl">{cat.icon}</span>
+                            </div>
+                            <span className="font-bold text-xs text-on-surface">{cat.name}</span>
+                            <span className="text-[9px] text-on-surface-variant font-medium mt-0.5">{cat.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
