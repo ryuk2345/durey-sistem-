@@ -2010,7 +2010,7 @@ function App() {
                           <option value="">-- Seleccionar operario --</option>
                           {backendState.operarios.map(o => (
                             <option key={o.id} value={o.id}>
-                              {o.nombre} ({o.tipo_contrato === 'jornal' ? `Sueldo Fijo: S/ ${o.tarifa.toFixed(2)}/día` : `A Destajo: S/ ${o.tarifa.toFixed(2)}/docena`})
+                              {o.nombre} ({o.tipo_contrato === 'jornal' ? `Sueldo Fijo: S/ ${Number(o.tarifa || 0).toFixed(2)}/día` : `A Destajo: S/ ${Number(o.tarifa || 0).toFixed(2)}/docena`})
                             </option>
                           ))}
                           {backendState.operarios.length === 0 && (
@@ -2404,7 +2404,7 @@ function App() {
                             <tr key={o.id} className="hover:bg-surface-container-high transition-colors">
                               <td className="px-6 py-3 font-semibold text-on-surface">{o.nombre}</td>
                               <td className="px-6 py-3"><span className="bg-primary-container text-primary text-[10px] px-2 py-0.5 rounded font-bold">Jornal Fijo</span></td>
-                              <td className="px-6 py-3 text-right font-mono font-bold text-on-surface">S/ {o.tarifa.toFixed(2)}</td>
+                              <td className="px-6 py-3 text-right font-mono font-bold text-on-surface">S/ {Number(o.tarifa || 0).toFixed(2)}</td>
                             </tr>
                           ))}
                           {backendState.operarios.filter(o => o.tipo_contrato === 'jornal').length === 0 && (
@@ -2438,20 +2438,21 @@ function App() {
                         </thead>
                         <tbody className="divide-y divide-outline-variant font-sans">
                           {backendState.operarios.filter(o => o.tipo_contrato === 'destajo').map(o => {
-                            const docenasProcesadas = o.docenas_remalladas || 0;
-                            const totalLiquidado = o.total_liquidado || (docenasProcesadas * o.tarifa);
+                            const docenasProcesadas = Number(o.docenas_remalladas || 0);
+                            const tar = Number(o.tarifa || 0);
+                            const totalLiquidado = Number(o.total_liquidado || (docenasProcesadas * tar));
                             return (
                               <tr key={o.id} className="hover:bg-surface-container-high transition-colors">
                                 <td className="px-6 py-3">
                                   <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-[10px] text-primary">
-                                      {o.nombre.substring(0, 2).toUpperCase()}
+                                      {(o.nombre || 'OP').substring(0, 2).toUpperCase()}
                                     </div>
                                     <span className="font-semibold text-on-surface">{o.nombre}</span>
                                   </div>
                                 </td>
                                 <td className="px-6 py-3 text-right font-mono font-bold text-on-surface">{docenasProcesadas} docenas</td>
-                                <td className="px-6 py-3 text-right font-mono text-on-surface-variant">S/ {o.tarifa.toFixed(2)}</td>
+                                <td className="px-6 py-3 text-right font-mono text-on-surface-variant">S/ {tar.toFixed(2)}</td>
                                 <td className="px-6 py-3 text-right font-mono text-primary font-bold">S/ {totalLiquidado.toFixed(2)}</td>
                               </tr>
                             );
