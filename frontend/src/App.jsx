@@ -68,65 +68,8 @@ function App() {
   // Reporte del Personal / Planilla Diaria (Lunes a Sábado)
   const [fechaDesde, setFechaDesde] = useState('2026-07-27');
   const [fechaHasta, setFechaHasta] = useState('2026-08-01');
-  const [selectedOperarioIdReporte, setSelectedOperarioIdReporte] = useState(1);
-  const [reportePersonal, setReportePersonal] = useState([
-    {
-      id: 1,
-      nombre: 'María Quispe',
-      rol: 'Costura (Destajo)',
-      registroDias: {
-        Lunes: { ninos: 5, damas: 4, futbol: 3, planchadoNormal: 0, planchadoFutbol: 0 },
-        Martes: { ninos: 6, damas: 5, futbol: 2, planchadoNormal: 0, planchadoFutbol: 0 },
-        Miercoles: { ninos: 4, damas: 6, futbol: 4, planchadoNormal: 0, planchadoFutbol: 0 },
-        Jueves: { ninos: 5, damas: 4, futbol: 3, planchadoNormal: 0, planchadoFutbol: 0 },
-        Viernes: { ninos: 6, damas: 5, futbol: 2, planchadoNormal: 0, planchadoFutbol: 0 },
-        Sabado: { ninos: 3, damas: 3, futbol: 1, planchadoNormal: 0, planchadoFutbol: 0 }
-      },
-      tarifas: { ninos: 2.50, damas: 2.80, futbol: 3.50, planchadoNormal: 1.50, planchadoFutbol: 2.20 }
-    },
-    {
-      id: 2,
-      nombre: 'Juan Huamán',
-      rol: 'Costura (Destajo)',
-      registroDias: {
-        Lunes: { ninos: 4, damas: 3, futbol: 2, planchadoNormal: 0, planchadoFutbol: 0 },
-        Martes: { ninos: 5, damas: 4, futbol: 3, planchadoNormal: 0, planchadoFutbol: 0 },
-        Miercoles: { ninos: 3, damas: 5, futbol: 2, planchadoNormal: 0, planchadoFutbol: 0 },
-        Jueves: { ninos: 4, damas: 4, futbol: 2, planchadoNormal: 0, planchadoFutbol: 0 },
-        Viernes: { ninos: 5, damas: 3, futbol: 1, planchadoNormal: 0, planchadoFutbol: 0 },
-        Sabado: { ninos: 2, docenas: 0, futbol: 0, planchadoNormal: 12, planchadoFutbol: 8 }
-      },
-      tarifas: { ninos: 2.50, damas: 2.80, futbol: 3.50, planchadoNormal: 1.50, planchadoFutbol: 2.20 }
-    },
-    {
-      id: 3,
-      nombre: 'Ana Ramos',
-      rol: 'Planchado',
-      registroDias: {
-        Lunes: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 20, planchadoFutbol: 15 },
-        Martes: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 22, planchadoFutbol: 18 },
-        Miercoles: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 25, planchadoFutbol: 20 },
-        Jueves: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 20, planchadoFutbol: 15 },
-        Viernes: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 24, planchadoFutbol: 22 },
-        Sabado: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 15, planchadoFutbol: 10 }
-      },
-      tarifas: { ninos: 2.50, damas: 2.80, futbol: 3.50, planchadoNormal: 1.50, planchadoFutbol: 2.20 }
-    },
-    {
-      id: 4,
-      nombre: 'Sofía Milla',
-      rol: 'Planchado',
-      registroDias: {
-        Lunes: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 18, planchadoFutbol: 12 },
-        Martes: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 20, planchadoFutbol: 14 },
-        Miercoles: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 22, planchadoFutbol: 16 },
-        Jueves: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 18, planchadoFutbol: 12 },
-        Viernes: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 20, planchadoFutbol: 15 },
-        Sabado: { ninos: 0, damas: 0, futbol: 0, planchadoNormal: 12, planchadoFutbol: 8 }
-      },
-      tarifas: { ninos: 2.50, damas: 2.80, futbol: 3.50, planchadoNormal: 1.50, planchadoFutbol: 2.20 }
-    }
-  ]);
+  const [selectedOperarioIdReporte, setSelectedOperarioIdReporte] = useState(null);
+  const [reportePersonal, setReportePersonal] = useState([]);
 
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
 
