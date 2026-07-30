@@ -329,38 +329,62 @@ function App() {
   // Fetch data
   const fetchData = async () => {
     try {
-      const resMaq = await fetch(`${API_BASE}/maquinas`);
-      const dataMaq = await resMaq.json();
+      let dataMaq = {};
+      let dataInv = {};
+      let dataMant = {};
+      let dataPlanilla = {};
+      let dataDespacho = {};
 
-      const resInv = await fetch(`${API_BASE}/inventario`);
-      const dataInv = await resInv.json();
+      try {
+        const res = await fetch(`${API_BASE}/maquinas`);
+        if (res.ok) dataMaq = await res.json();
+      } catch (err) { console.warn("Error fetching /maquinas:", err); }
 
-      const resMant = await fetch(`${API_BASE}/mantenimiento/bitacora`);
-      const dataMant = await resMant.json();
+      try {
+        const res = await fetch(`${API_BASE}/inventario`);
+        if (res.ok) dataInv = await res.json();
+      } catch (err) { console.warn("Error fetching /inventario:", err); }
 
-      const resPlanilla = await fetch(`${API_BASE}/planilla`);
-      const dataPlanilla = await resPlanilla.json();
+      try {
+        const res = await fetch(`${API_BASE}/mantenimiento/bitacora`);
+        if (res.ok) dataMant = await res.json();
+      } catch (err) { console.warn("Error fetching /mantenimiento:", err); }
 
-      const resDespacho = await fetch(`${API_BASE}/despacho/ordenes`);
-      const dataDespacho = await resDespacho.json();
+      try {
+        const res = await fetch(`${API_BASE}/planilla`);
+        if (res.ok) dataPlanilla = await res.json();
+      } catch (err) { console.warn("Error fetching /planilla:", err); }
+
+      try {
+        const res = await fetch(`${API_BASE}/despacho/ordenes`);
+        if (res.ok) dataDespacho = await res.json();
+      } catch (err) { console.warn("Error fetching /despacho:", err); }
 
       setBackendState(prev => ({
         ...prev,
-        maquinas: dataMaq.maquinas || [],
-        operarios: dataMaq.operarios || [],
-        lotes: dataMaq.lotes || [],
-        planilla: dataPlanilla.planilla || [],
-        modelos: dataPlanilla.modelos || [],
-        inventario_hilo: dataMaq.inventario_hilo || prev.inventario_hilo || [],
-        distribucion_hilo: dataMaq.distribucion_hilo || prev.distribucion_hilo || [],
-        proveedores_hilo: dataMaq.proveedores_hilo || prev.proveedores_hilo || [],
-        salones: dataInv.salones || [],
-        bultos: dataInv.bultos || [],
-        clientes: dataMaq.clientes || prev.clientes || [],
-        bitacora: dataMant.bitacora || [],
-        recurrentes: dataMant.recurrentes || []
+        maquinas: Array.isArray(dataMaq.maquinas) ? dataMaq.maquinas : (prev.maquinas || []),
+        operarios: Array.isArray(dataMaq.operarios) ? dataMaq.operarios : (prev.operarios || []),
+        lotes: Array.isArray(dataMaq.lotes) ? dataMaq.lotes : (prev.lotes || []),
+        planilla: Array.isArray(dataPlanilla.planilla) ? dataPlanilla.planilla : (prev.planilla || []),
+        modelos: Array.isArray(dataPlanilla.modelos) ? dataPlanilla.modelos : (prev.modelos || []),
+        inventario_hilo: Array.isArray(dataMaq.inventario_hilo) ? dataMaq.inventario_hilo : (prev.inventario_hilo || []),
+        distribucion_hilo: Array.isArray(dataMaq.distribucion_hilo) ? dataMaq.distribucion_hilo : (prev.distribucion_hilo || []),
+        proveedores_hilo: Array.isArray(dataMaq.proveedores_hilo) ? dataMaq.proveedores_hilo : (prev.proveedores_hilo || []),
+        salones: Array.isArray(dataInv.salones) ? dataInv.salones : (prev.salones.length ? prev.salones : [
+          { id: "Salon A", capacidad_maxima_bultos: 50, bultos_actuales: 0 },
+          { id: "Salon B", capacidad_maxima_bultos: 50, bultos_actuales: 0 },
+          { id: "Salon C", capacidad_maxima_bultos: 40, bultos_actuales: 0 },
+          { id: "Almacen General", capacidad_maxima_bultos: 1000, bultos_actuales: 0 }
+        ]),
+        bultos: Array.isArray(dataInv.bultos) ? dataInv.bultos : (prev.bultos || []),
+        clientes: Array.isArray(dataMaq.clientes) ? dataMaq.clientes : (prev.clientes || []),
+        bitacora: Array.isArray(dataMant.bitacora) ? dataMant.bitacora : (prev.bitacora || []),
+        recurrentes: Array.isArray(dataMant.recurrentes) ? dataMant.recurrentes : (prev.recurrentes || [])
       }));
-      setOrdenesDespacho(dataDespacho.ordenes || []);
+
+      if (Array.isArray(dataDespacho.ordenes)) {
+        setOrdenesDespacho(dataDespacho.ordenes);
+      }
       setConnectionError(false);
     } catch (e) {
       console.warn("Backend no disponible. Usando estado limpio local.");
