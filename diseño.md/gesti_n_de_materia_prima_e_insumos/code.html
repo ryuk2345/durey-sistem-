@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 225, 237, 0.5);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e8e7f3",
+                        "secondary": "#505f76",
+                        "on-primary-fixed-variant": "#0039b5",
+                        "background": "#faf8ff",
+                        "on-tertiary-container": "#ffc9b7",
+                        "surface-variant": "#e2e1ed",
+                        "primary-container": "#1d4ed8",
+                        "on-surface": "#1a1b23",
+                        "on-background": "#1a1b23",
+                        "surface-container-low": "#f3f2fe",
+                        "primary-fixed-dim": "#b7c4ff",
+                        "on-surface-variant": "#434655",
+                        "on-primary-container": "#cad3ff",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "primary-fixed": "#dce1ff",
+                        "on-secondary-container": "#54647a",
+                        "inverse-on-surface": "#f0f0fb",
+                        "surface-tint": "#2151da",
+                        "inverse-primary": "#b7c4ff",
+                        "tertiary-fixed": "#ffdbcf",
+                        "tertiary-container": "#a73400",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#d0e1fb",
+                        "inverse-surface": "#2e3039",
+                        "surface-container-highest": "#e2e1ed",
+                        "on-tertiary-fixed-variant": "#832700",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d9d9e5",
+                        "outline-variant": "#c4c5d7",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#390c00",
+                        "on-secondary-fixed": "#0b1c30",
+                        "outline": "#747686",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#faf8ff",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#7f2500",
+                        "surface": "#faf8ff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "primary": "#0037b0",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-container": "#ededf9",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#001551"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "0.5rem",
+                        "base": "4px",
+                        "md": "1rem",
+                        "gutter": "1.5rem",
+                        "margin": "2rem",
+                        "lg": "1.5rem",
+                        "xl": "2rem",
+                        "xs": "0.25rem",
+                        "2xl": "3rem"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-background overflow-x-hidden">
+<!-- Side Navigation Bar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface border-r border-outline-variant flex flex-col py-md z-40">
+<div class="px-md mb-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Medias Durey</h1>
+<p class="text-on-surface-variant font-label-md">Factory Admin</p>
+</div>
+<nav class="flex-1 px-sm space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">precision_manufacturing</span>
+<span class="font-body-md">Knitting</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">payments</span>
+<span class="font-body-md">Linking &amp; Payroll</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">package_2</span>
+<span class="font-body-md">Finishing &amp; Packing</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">inventory_2</span>
+<span class="font-body-md">Storage</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">inventory</span>
+<span class="font-body-md">Catalog</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">point_of_sale</span>
+<span class="font-body-md">POS</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">settings_suggest</span>
+<span class="font-body-md">Maintenance Log</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-semibold shadow-sm" href="#">
+<span class="material-symbols-outlined">rebase_edit</span>
+<span class="font-body-md">Raw Materials</span>
+</a>
+</nav>
+<div class="px-sm pt-md border-t border-outline-variant mt-auto">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-body-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Top App Bar -->
+<header class="sticky top-0 z-30 w-full bg-surface border-b border-outline-variant ml-[280px] w-[calc(100%-280px)] flex justify-between items-center px-lg py-sm">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-md w-80 focus:ring-2 focus:ring-primary" placeholder="Buscar lote, proveedor o material..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="relative p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<div class="flex items-center gap-3 pl-md border-l border-outline-variant">
+<div class="text-right">
+<p class="font-body-md font-semibold text-on-surface leading-tight">Admin Principal</p>
+<p class="text-label-md text-on-surface-variant">Control de Calidad</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-quality studio portrait of a professional factory administrator in their late 30s, wearing a clean white industrial coat. The background is a slightly blurred modern factory floor with soft blue and white lighting, creating a high-end corporate management atmosphere consistent with the Slate and Blue brand colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA939a4FZ_2Tiiw53t1x988k93Dixqa4nQQEsbOjqOALfjstOrNiwg-7wsJVkuJt8sA9wzsPZah5e_aLq6nWNcORnuwuTMzmCmssgAqXb9gtgMYrznkqDazCp0nYFYXjTtKf1pMugHKJA-kuAxBYAT7rr5FXP8QkTD3NQc7OIt_AR88141Lah_NElO8xn5v-NIab1rswK3E68AosXCu-qOxH7rWeMvMzaffncR0AYDkoH_g4VByX2oTfLTDca8_OG_B7VkiynzZ_a4"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[280px] p-margin max-w-[1600px] mx-auto">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-margin">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-xs">Gestión de Materia Prima: Hilo</h2>
+<nav class="flex gap-2 text-label-md text-on-surface-variant uppercase tracking-wider">
+<span>Inventario</span>
+<span>/</span>
+<span class="text-primary font-bold">Control de Recepción</span>
+</nav>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline text-on-surface font-semibold rounded-lg hover:bg-surface-container transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">history</span>
+                    Historial de Devoluciones
+                </button>
+<button class="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-container transition-all shadow-sm active:scale-95">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                    Nueva Recepción
+                </button>
+</div>
+</div>
+<!-- KPI Bento Grid -->
+<div class="grid grid-cols-4 gap-gutter mb-margin">
+<div class="bg-surface border border-outline-variant p-md rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<p class="text-label-md text-on-surface-variant">RECIBIDO HOY</p>
+<span class="material-symbols-outlined text-primary">download</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-md font-bold">1,240</span>
+<span class="text-body-md text-on-surface-variant font-medium">kg</span>
+</div>
+<div class="mt-4 flex items-center gap-1 text-emerald-600 text-label-md">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>12% vs ayer</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant p-md rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<p class="text-label-md text-on-surface-variant">PENDIENTE CALIDAD</p>
+<span class="material-symbols-outlined text-tertiary">hourglass_empty</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-md font-bold">450</span>
+<span class="text-body-md text-on-surface-variant font-medium">kg</span>
+</div>
+<div class="mt-4 flex items-center gap-1 text-on-surface-variant text-label-md">
+<span>3 lotes en espera</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant p-md rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<p class="text-label-md text-on-surface-variant">TASA RECHAZO (MES)</p>
+<span class="material-symbols-outlined text-error">dangerous</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-md font-bold">2.4</span>
+<span class="text-body-md text-on-surface-variant font-medium">%</span>
+</div>
+<div class="mt-4 flex items-center gap-1 text-error text-label-md">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>0.5% incremento</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant p-md rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<p class="text-label-md text-on-surface-variant">STOCK DISPONIBLE</p>
+<span class="material-symbols-outlined text-on-secondary-fixed-variant">inventory_2</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-md font-bold">8,920</span>
+<span class="text-body-md text-on-surface-variant font-medium">kg</span>
+</div>
+<div class="mt-4 flex items-center gap-1 text-on-surface-variant text-label-md">
+<span>Suficiente para 12 días</span>
+</div>
+</div>
+</div>
+<!-- Active Inspection & Queue -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left: Reception Queue Table -->
+<div class="col-span-8 bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col shadow-sm">
+<div class="p-md border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-sm text-on-surface">Lotes en Recepción</h3>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-surface-container-highest rounded-full text-label-md text-on-surface-variant">Filtrar por: Todo</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 text-label-md text-on-surface-variant border-b border-outline-variant">
+<th class="px-md py-3 font-semibold">LOTE ID</th>
+<th class="px-md py-3 font-semibold">PROVEEDOR</th>
+<th class="px-md py-3 font-semibold">MATERIAL</th>
+<th class="px-md py-3 font-semibold text-right">PESO (KG)</th>
+<th class="px-md py-3 font-semibold text-center">ESTADO</th>
+<th class="px-md py-3 font-semibold">ACCIONES</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-slate-100 transition-colors cursor-pointer group active">
+<td class="px-md py-4 font-data-mono text-primary font-bold">#HP-2024-089</td>
+<td class="px-md py-4 font-medium text-on-surface">Inditex Yarn S.A.</td>
+<td class="px-md py-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-blue-500"></div>
+<span>Poliéster 30/2</span>
+</div>
+</td>
+<td class="px-md py-4 text-right font-data-mono font-semibold">250.00</td>
+<td class="px-md py-4 text-center">
+<span class="px-2 py-1 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full uppercase">Inspeccionando</span>
+</td>
+<td class="px-md py-4">
+<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-100 transition-colors cursor-pointer">
+<td class="px-md py-4 font-data-mono">#HP-2024-090</td>
+<td class="px-md py-4 font-medium text-on-surface">Hilos del Sur Ltd.</td>
+<td class="px-md py-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-slate-300"></div>
+<span>Algodón Peinado</span>
+</div>
+</td>
+<td class="px-md py-4 text-right font-data-mono font-semibold">120.50</td>
+<td class="px-md py-4 text-center">
+<span class="px-2 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase">Pendiente</span>
+</td>
+<td class="px-md py-4">
+<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-100 transition-colors cursor-pointer">
+<td class="px-md py-4 font-data-mono">#HP-2024-091</td>
+<td class="px-md py-4 font-medium text-on-surface">Global Textiles Co.</td>
+<td class="px-md py-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-amber-400"></div>
+<span>Lana Merino Mix</span>
+</div>
+</td>
+<td class="px-md py-4 text-right font-data-mono font-semibold">85.00</td>
+<td class="px-md py-4 text-center">
+<span class="px-2 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase">Pendiente</span>
+</td>
+<td class="px-md py-4">
+<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right: Quality Control Form (Integrated Wizard) -->
+<div class="col-span-4 bg-surface border border-outline-variant rounded-xl shadow-md overflow-hidden flex flex-col">
+<div class="p-md bg-primary text-on-primary">
+<h3 class="font-headline-sm">Control de Calidad</h3>
+<p class="text-label-md opacity-80 uppercase tracking-widest mt-1">Lote #HP-2024-089</p>
+</div>
+<div class="flex-1 p-md space-y-6">
+<!-- Progress Stepper -->
+<div class="flex items-center justify-between px-2">
+<div class="flex flex-col items-center gap-1">
+<div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">PESAJE</span>
+</div>
+<div class="h-[2px] flex-1 bg-emerald-500 mx-2"></div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-8 h-8 rounded-full border-2 border-primary text-primary flex items-center justify-center font-bold text-sm">
+                                2
+                            </div>
+<span class="text-[10px] font-bold text-primary">ANÁLISIS</span>
+</div>
+<div class="h-[2px] flex-1 bg-outline-variant mx-2"></div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-8 h-8 rounded-full border-2 border-outline-variant text-outline flex items-center justify-center font-bold text-sm">
+                                3
+                            </div>
+<span class="text-[10px] font-bold text-on-surface-variant">VEREDICTO</span>
+</div>
+</div>
+<div class="space-y-4">
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Tensión del Hilo (cN/tex)</span>
+<div class="flex gap-2">
+<input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md px-4 py-2" type="number" value="14.2"/>
+<div class="bg-surface-container flex items-center px-3 rounded-lg text-label-md font-bold">NORMAL</div>
+</div>
+</label>
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Presencia de Hebras/Nudos</span>
+<select class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md px-4 py-2">
+<option>Ninguna (Óptimo)</option>
+<option selected="">Fallas Menores (Aceptable)</option>
+<option>Fallas Críticas (Rechazar)</option>
+</select>
+</label>
+<div class="p-4 bg-error-container/30 border border-error-container rounded-lg">
+<p class="text-label-md text-on-error-container font-bold mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+                                ¿Reportar Falla de Calidad?
+                            </p>
+<p class="text-body-md text-on-error-container opacity-80 mb-3">Si detecta fallas críticas de tensión o hebras, puede iniciar el flujo de devolución sin afectar el inventario productivo.</p>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-error text-white rounded-lg text-label-md font-bold hover:bg-error/90 transition-all active:scale-95" onclick="openReturnModal()">
+                                    DEVOLVER A PROVEEDOR
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<div class="p-md bg-surface-container-low border-t border-outline-variant flex gap-3">
+<button class="flex-1 py-3 border border-outline text-on-surface font-bold rounded-lg hover:bg-surface-container-high transition-all active:scale-95">RECHAZAR</button>
+<button class="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-md active:scale-95">APROBAR LOTE</button>
+</div>
+</div>
+</div>
+<!-- Detailed Material View (Asymmetric Layout) -->
+<div class="mt-margin grid grid-cols-12 gap-gutter">
+<div class="col-span-4 space-y-gutter">
+<div class="bg-surface-container-highest rounded-2xl overflow-hidden h-[300px] relative shadow-lg border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A detailed close-up of a premium navy blue yarn spool resting on a clean metallic factory laboratory table. The lighting is focused and professional, highlighting the texture and fiber detail of the thread. Minimalist background with subtle industrial equipment hints, following the modern industrial SaaS aesthetic with slate and blue tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX_-FcDN01Pcs42slBrCUjTaembpgMeC_YzOv0NXNPGgkjf2llv2wbL6N0LAwWBF0YND6JPPf-mvZsNcoCQ-h3ZfNneY-5ZPmCdPuinuNbfrFvv5lKD872SZp5s_0Xque7SrDNmX1PXshiRVetWDvjgPFuF13tHZCumB-K_6aXmO5eqplEC5iTQ1uI5C1kU4M-Y54TMn7sOOnI5OGE0zPX6wuiaPyuXhKzaf7L5wz0K-K5tHcDIWyuxVrHJuvv4m4LKfBvgCipvco"/>
+<div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold text-primary shadow-sm">
+                        MUESTRA: #HP-2024-089-S1
+                    </div>
+</div>
+<div class="bg-surface border border-outline-variant p-md rounded-xl">
+<h4 class="font-headline-sm mb-3">Especificación Técnica</h4>
+<div class="space-y-2">
+<div class="flex justify-between py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Composición</span>
+<span class="font-semibold">60% Cotton / 40% Poly</span>
+</div>
+<div class="flex justify-between py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Torsión</span>
+<span class="font-semibold">680 TPM</span>
+</div>
+<div class="flex justify-between py-2">
+<span class="text-on-surface-variant">Elasticidad</span>
+<span class="font-semibold">12.5%</span>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-8 bg-surface border border-outline-variant rounded-xl p-md flex flex-col h-full">
+<div class="flex justify-between items-center mb-md">
+<h4 class="font-headline-sm">Análisis de Estabilidad de Proveedor</h4>
+<span class="text-label-md text-emerald-600 font-bold bg-emerald-50 px-3 py-1 rounded-full">Proveedor Categoría A</span>
+</div>
+<div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg p-md relative overflow-hidden">
+<!-- Graph Placeholder Simulation -->
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+
+</div>
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div class="flex justify-between items-end h-40 gap-4 mb-4">
+<div class="flex-1 bg-primary/20 rounded-t-sm relative group">
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-on-surface text-white text-[10px] px-2 py-1 rounded">14.5</div>
+<div class="bg-primary absolute bottom-0 w-full h-[60%] rounded-t-sm"></div>
+</div>
+<div class="flex-1 bg-primary/20 rounded-t-sm relative group">
+<div class="bg-primary absolute bottom-0 w-full h-[75%] rounded-t-sm"></div>
+</div>
+<div class="flex-1 bg-primary/20 rounded-t-sm relative group">
+<div class="bg-primary absolute bottom-0 w-full h-[65%] rounded-t-sm"></div>
+</div>
+<div class="flex-1 bg-primary/20 rounded-t-sm relative group">
+<div class="bg-primary absolute bottom-0 w-full h-[90%] rounded-t-sm"></div>
+</div>
+<div class="flex-1 bg-primary/20 rounded-t-sm relative group">
+<div class="bg-primary absolute bottom-0 w-full h-[70%] rounded-t-sm"></div>
+</div>
+<div class="flex-1 bg-primary/20 rounded-t-sm relative group">
+<div class="bg-error absolute bottom-0 w-full h-[30%] rounded-t-sm"></div>
+</div>
+</div>
+<div class="flex justify-between text-[10px] text-on-surface-variant font-bold">
+<span>Lote 084</span>
+<span>Lote 085</span>
+<span>Lote 086</span>
+<span>Lote 087</span>
+<span>Lote 088</span>
+<span class="text-error">Actual (089)</span>
+</div>
+<p class="mt-md text-body-md text-on-surface-variant">Variación de tensión detectada en el lote actual respecto a la media histórica del proveedor Inditex Yarn S.A. Se recomienda inspección visual exhaustiva de hebras.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal: Devolución a Proveedor (Hidden by default) -->
+<div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden" id="returnModal">
+<div class="bg-surface w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden scale-95 transition-transform duration-300" id="modalContainer">
+<div class="p-md bg-error text-white flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">assignment_return</span>
+<h3 class="font-headline-sm">Reportar Falla &amp; Devolución</h3>
+</div>
+<button class="material-symbols-outlined hover:bg-white/20 p-1 rounded-full transition-colors" onclick="closeReturnModal()">close</button>
+</div>
+<div class="p-lg space-y-gutter">
+<p class="text-body-md text-on-surface-variant">Este proceso generará un vale de devolución al proveedor <strong>Inditex Yarn S.A.</strong> por fallas técnicas detectadas.</p>
+<div class="grid grid-cols-2 gap-4">
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Motivo de Rechazo</span>
+<select class="w-full rounded-lg border-outline-variant text-body-md px-4 py-2">
+<option>Tensión Inestable</option>
+<option>Exceso de Hebras</option>
+<option>Nudos excesivos</option>
+<option>Humedad fuera de rango</option>
+</select>
+</label>
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Cantidad a devolver</span>
+<input class="w-full rounded-lg border-outline-variant text-body-md px-4 py-2 bg-surface-container" readonly="" type="text" value="250 kg"/>
+</label>
+</div>
+<div class="p-4 bg-surface-container-low border-l-4 border-primary rounded-r-lg">
+<p class="text-label-md font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">info</span>
+                        Impacto en Inventario
+                    </p>
+<p class="text-[12px] text-on-surface-variant mt-1">Este lote no ha sido ingresado al inventario de producción. La devolución afectará solo la cuenta corriente con el proveedor y el stock de recepción.</p>
+</div>
+<label class="block">
+<span class="text-label-md text-on-surface-variant mb-1 block">Observaciones para el Proveedor</span>
+<textarea class="w-full rounded-lg border-outline-variant text-body-md px-4 py-2 min-h-[100px]" placeholder="Describa el defecto detalladamente..."></textarea>
+</label>
+</div>
+<div class="p-md bg-surface-container-low flex justify-end gap-3 border-t border-outline-variant">
+<button class="px-6 py-2 text-on-surface font-semibold hover:bg-surface-container transition-all" onclick="closeReturnModal()">Cancelar</button>
+<button class="px-6 py-2 bg-error text-white font-bold rounded-lg hover:shadow-lg transition-all active:scale-95">PROCESAR DEVOLUCIÓN</button>
+</div>
+</div>
+</div>
+<script>
+        function openReturnModal() {
+            const modal = document.getElementById('returnModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeReturnModal() {
+            const modal = document.getElementById('returnModal');
+            const container = document.getElementById('modalContainer');
+            container.classList.add('scale-95');
+            container.classList.remove('scale-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Simulating Micro-interactions
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                document.querySelectorAll('tbody tr').forEach(r => {
+                    r.classList.remove('bg-slate-100', 'border-l-4', 'border-primary');
+                    r.querySelector('.font-data-mono').classList.remove('text-primary', 'font-bold');
+                });
+                this.classList.add('bg-slate-100', 'border-l-4', 'border-primary');
+                this.querySelector('.font-data-mono').classList.add('text-primary', 'font-bold');
+            });
+        });
+    </script>
+</body></html>

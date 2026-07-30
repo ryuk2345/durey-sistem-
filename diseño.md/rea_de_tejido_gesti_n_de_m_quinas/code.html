@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Medias Durey - Área de Tejido</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e8e7f3",
+                        "secondary": "#505f76",
+                        "on-primary-fixed-variant": "#0039b5",
+                        "background": "#faf8ff",
+                        "on-tertiary-container": "#ffc9b7",
+                        "surface-variant": "#e2e1ed",
+                        "primary-container": "#1d4ed8",
+                        "on-surface": "#1a1b23",
+                        "on-background": "#1a1b23",
+                        "surface-container-low": "#f3f2fe",
+                        "primary-fixed-dim": "#b7c4ff",
+                        "on-surface-variant": "#434655",
+                        "on-primary-container": "#cad3ff",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "primary-fixed": "#dce1ff",
+                        "on-secondary-container": "#54647a",
+                        "inverse-on-surface": "#f0f0fb",
+                        "surface-tint": "#2151da",
+                        "inverse-primary": "#b7c4ff",
+                        "tertiary-fixed": "#ffdbcf",
+                        "tertiary-container": "#a73400",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#d0e1fb",
+                        "inverse-surface": "#2e3039",
+                        "surface-container-highest": "#e2e1ed",
+                        "on-tertiary-fixed-variant": "#832700",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d9d9e5",
+                        "outline-variant": "#c4c5d7",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#390c00",
+                        "on-secondary-fixed": "#0b1c30",
+                        "outline": "#747686",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#faf8ff",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#7f2500",
+                        "surface": "#faf8ff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "primary": "#0037b0",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-container": "#ededf9",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#001551"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "0.5rem",
+                        "base": "4px",
+                        "md": "1rem",
+                        "gutter": "1.5rem",
+                        "margin": "2rem",
+                        "lg": "1.5rem",
+                        "xl": "2rem",
+                        "xs": "0.25rem",
+                        "2xl": "3rem"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .machine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface border-r border-outline-variant shadow-sm flex flex-col py-md z-40">
+<div class="px-6 mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Medias Durey</h1>
+<p class="text-on-surface-variant font-label-md">Factory Admin</p>
+</div>
+<nav class="flex-1 px-4 space-y-1 overflow-y-auto scroll-hide">
+<!-- Navigation Items Mapping from JSON -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-semibold transition-all duration-150 ease-in-out active:scale-95" href="#">
+<span class="material-symbols-outlined">precision_manufacturing</span>
+<span>Knitting</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span>Linking &amp; Payroll</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">package_2</span>
+<span>Finishing &amp; Packing</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Storage</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory</span>
+<span>Catalog</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span>POS</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">settings_suggest</span>
+<span>Maintenance Log</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">rebase_edit</span>
+<span>Raw Materials</span>
+</a>
+</nav>
+<div class="px-4 mt-auto pt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+<div class="flex items-center gap-3 px-4 py-4 mt-2">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A professional headshot of a factory administrator in a brightly lit, modern office environment. The lighting is soft and neutral, conveying a sense of authority and precision. The subject is wearing business casual attire, reflecting a corporate modern industrial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRKjFDFdezOgFvgMmf3uwVF_3et5Gi_YZbQydOawTWO_oZyh4Mp9wbK9oEDveZo_Wzv0rRK9IbVPNBxhKT24J8nCLKwIr41M2zyn0eaxGaqTSCeleIUFux2lOAz4WvpYJnH_As3dp3kvZrhuoOYSCHGKmfLnCcbEKU8vjNAaZI-TBdM298eKNw1S8M5-XeTuecfG0tIo3e3hm1JZ7ucSvbnYfFrPtIubPJ1-rNy1DIjYmQlN5D_eSi8OIWgX2oZUS_peejsF4QlXk"/>
+<div class="overflow-hidden">
+<p class="font-label-md text-on-surface font-bold truncate">Admin User</p>
+<p class="text-[10px] text-on-surface-variant truncate">admin@mediasdurey.com</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="sticky top-0 z-30 w-full bg-surface border-b border-outline-variant flex justify-between items-center px-lg py-sm ml-[280px] max-w-[calc(100%-280px)]">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary text-body-md" placeholder="Buscar máquina o lote..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant relative active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-2 cursor-pointer active:opacity-80">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">Área de Tejido</span>
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[280px] p-gutter transition-all duration-300">
+<div class="flex gap-gutter">
+<!-- Left Side: Interactive Grid -->
+<div class="flex-1">
+<div class="flex items-center justify-between mb-lg">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Monitor de Producción</h2>
+<p class="text-on-surface-variant">Control de máquinas en tiempo real</p>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full font-label-md border border-emerald-100">
+<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> 42 Activas
+                        </div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full font-label-md border border-amber-100">
+<span class="w-2 h-2 bg-amber-500 rounded-full"></span> 12 Mantenimiento
+                        </div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-label-md border border-rose-100">
+<span class="w-2 h-2 bg-rose-500 rounded-full"></span> 10 Alerta
+                        </div>
+</div>
+</div>
+<!-- 64 Machines Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 h-[calc(100vh-220px)] overflow-y-auto pr-2 scroll-hide">
+<!-- Machine Cards (Generated) -->
+<script>
+                        const gridContainer = document.currentScript.parentElement;
+                        const statuses = [
+                            { label: 'En Marcha', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+                            { label: 'En Pausa', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+                            { label: 'Error Crítico', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' }
+                        ];
+                        const operators = ['J. Pérez', 'A. García', 'M. López', 'R. Sánchez', 'L. Martínez'];
+
+                        for (let i = 1; i <= 64; i++) {
+                            const id = `M-${String(i).padStart(2, '0')}`;
+                            const status = statuses[Math.floor(Math.random() * statuses.length)];
+                            const operator = operators[Math.floor(Math.random() * operators.length)];
+                            
+                            const card = `
+                                <div class="bg-white border border-outline-variant rounded-xl p-4 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <p class="font-data-mono text-primary font-bold">${id}</p>
+                                            <p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">${operator}</p>
+                                        </div>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${status.bg} ${status.text} border ${status.border}">${status.label}</span>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="w-full bg-surface-container-low h-1 rounded-full overflow-hidden">
+                                            <div class="bg-primary h-full transition-all duration-1000" style="width: ${Math.floor(Math.random() * 100)}%"></div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button onclick="openLotModal()" class="flex-1 py-1.5 text-[11px] font-bold rounded bg-primary text-white hover:bg-primary-container transition-colors active:scale-95">INICIAR LOTE</button>
+                                            <button class="flex-1 py-1.5 text-[11px] font-bold rounded border border-outline text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-95">CLASIFICAR</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            gridContainer.insertAdjacentHTML('beforeend', card);
+                        }
+                    </script>
+</div>
+</div>
+<!-- Right Side: Side Panel -->
+<div class="w-80 space-y-gutter">
+<!-- Lot Loading Form -->
+<section class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-4">Carga de Lote</h3>
+<form class="space-y-4" onsubmit="event.preventDefault(); validateStock();">
+<div class="space-y-1.5">
+<label class="font-label-md text-on-surface-variant">Tipo de Hilo</label>
+<select class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md">
+<option>Algodón Premium 40/1</option>
+<option>Poliéster Industrial</option>
+<option>Lana Merina Mezcla</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-md text-on-surface-variant">Operador de Turno</label>
+<select class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md">
+<option>Juan Pérez (Nivel Senior)</option>
+<option>Ana García (Nivel Master)</option>
+<option>Mario López (Nivel Junior)</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-md text-on-surface-variant">Cantidad Requerida (kg)</label>
+<input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md" type="number" value="5"/>
+</div>
+<div class="pt-2">
+<button class="w-full bg-primary text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95" type="submit">
+                                Validar y Cargar
+                            </button>
+</div>
+</form>
+</section>
+<!-- Status Insights Card -->
+<section class="bg-surface-container-low border border-outline-variant rounded-2xl p-6">
+<h4 class="font-label-md text-on-surface font-bold uppercase tracking-widest mb-4">Eficiencia de Planta</h4>
+<div class="space-y-6">
+<div class="flex items-end justify-between">
+<div>
+<p class="text-[32px] font-bold text-on-surface leading-none">88.4%</p>
+<p class="text-xs text-on-surface-variant mt-1">OEE Promedio</p>
+</div>
+<div class="text-emerald-600 font-bold flex items-center gap-1 text-sm">
+<span class="material-symbols-outlined text-sm">trending_up</span> +2.4%
+                            </div>
+</div>
+<div class="h-16 w-full bg-white rounded-lg flex items-end gap-1 p-2 overflow-hidden">
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[40%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[60%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[50%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[80%]"></div>
+<div class="flex-1 bg-primary rounded-t h-[95%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[70%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[65%]"></div>
+</div>
+</div>
+</section>
+<div class="rounded-2xl overflow-hidden relative h-48 border border-outline-variant">
+<img class="absolute inset-0 w-full h-full object-cover brightness-75" data-alt="A clean, wide-angle interior view of a modern textile factory with rows of high-tech knitting machines. The space is exceptionally clean and well-lit with cool-toned LED lighting, reflecting off polished grey floors. The overall color palette is dominated by slate blues, greys, and whites, accented by technical indicators on machine screens." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQeAt7ZwQkVBV76N22G8Ys1iLAeVhlwRQQOOOlB5zFxmsNyMs4SAJG2ScRSQhFpv69PLxa6qPEAShDRKMImHiMH9gadhAwEmYzqcN-a5wFYFF6j-o7SstA6oqsZDoyU9PWiZnfB5jUTuwEE5OwlbgJajs0NdCE7HzmOuPEvRKdpX5tzu04lK4hfXjm78DeCnqIvpRop6Lz6pbb43cQsBpTre0-KQXlTYjssTexXfaYtCHVvbIbz5GHgxYluoZQqKYuaPi2Yr2rfLc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent p-6 flex flex-col justify-end">
+<p class="text-white font-headline-sm text-headline-sm leading-tight">Mantenimiento Preventivo</p>
+<p class="text-white/80 text-xs">Próxima ronda en 2h 15m</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal: Stock Validation Error -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300" id="validation-modal">
+<div class="bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl scale-95 transition-transform duration-300" id="modal-content">
+<div class="p-8 text-center">
+<div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-4xl">inventory_2</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Stock Insuficiente</h3>
+<p class="text-on-surface-variant mb-6">No es posible iniciar el lote solicitado debido a una falta de materia prima en el almacén de planta.</p>
+<div class="bg-surface-container-low rounded-xl p-4 mb-8 text-left space-y-2 border border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant font-label-md">Requerido:</span>
+<span class="font-data-mono font-bold text-on-surface">5.00 kg</span>
+</div>
+<div class="flex justify-between items-center text-rose-600">
+<span class="font-label-md">En Stock:</span>
+<span class="font-data-mono font-bold">2.34 kg</span>
+</div>
+<div class="pt-2 border-t border-outline-variant flex justify-between items-center text-error font-bold">
+<span>Faltante:</span>
+<span>-2.66 kg</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<button class="w-full py-3 bg-error text-white rounded-xl font-bold hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2" onclick="closeModal()">
+<span class="material-symbols-outlined">report_gmailerrorred</span>
+                        Notificar Supervisor
+                    </button>
+<button class="w-full py-3 border border-outline text-on-surface-variant rounded-xl font-bold hover:bg-surface-container-low transition-all" onclick="closeModal()">
+                        Cancelar
+                    </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+        function openLotModal() {
+            // Usually would open a preparation modal, here we just trigger the flow
+            validateStock();
+        }
+
+        function validateStock() {
+            const modal = document.getElementById('validation-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('validation-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        }
+
+        // Quick micro-interaction for cards
+        document.querySelectorAll('.machine-grid > div').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body></html>

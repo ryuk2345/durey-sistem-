@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #dc2626; /* Rojo Durey */
+  --color-primary-container: #fee2e2;
+  --color-on-primary-container: #991b1b;
+  --color-secondary: #111827;
+  --color-secondary-container: #e4e4e7;
+  --color-on-secondary-container: #09090b;
+  --color-background: #f4f4f5; /* Gris claro de fondo para contrastar con tarjetas blancas */
+  --color-surface: #ffffff;
+  --color-surface-container: #e4e4e7;
+  --color-surface-container-low: #fafafa;
+  --color-surface-container-high: #d4d4d8;
+  --color-surface-container-highest: #a1a1aa;
+  --color-on-surface: #09090b; /* Letras principales en negro puro para máxima legibilidad */
+  --color-on-background: #09090b;
+  --color-on-surface-variant: #27272a; /* Letras secundarias y etiquetas más oscuras (zinc-800) */
+  --color-outline-variant: #09090b; /* Bordes negros/oscuros definidos para destacar tarjetas blancas */
+  --color-outline: #27272a; /* Contornos y divisores principales más oscuros (zinc-800) */
+  --color-error: #b91c1c;
+  --color-error-container: #fee2e2;
+  --color-on-error: #ffffff;
+  --color-surface-tint: #dc2626;
+  --color-inverse-surface: #111827;
+  --color-inverse-on-surface: #f9fafb;
+  --color-inverse-primary: #fca5a5;
+  --color-on-primary: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-tertiary: #b91c1c;
+  --color-tertiary-container: #fee2e2;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #991b1b;
+}
+
+:root.dark {
+  --color-background: #09090b; /* Fondo principal oscuro */
+  --color-surface: #18181b; /* Tarjetas y paneles */
+  --color-surface-container: #27272a;
+  --color-surface-container-low: #18181b;
+  --color-surface-container-high: #3f3f46;
+  --color-surface-container-highest: #52525b;
+  --color-on-surface: #f4f4f5;
+  --color-on-background: #f4f4f5;
+  --color-on-surface-variant: #a1a1aa;
+  --color-outline-variant: #3f3f46; /* Bordes grises más visibles en modo oscuro */
+  --color-outline: #52525b;
+  --color-secondary: #f4f4f5;
+  --color-secondary-container: #27272a;
+  --color-on-secondary-container: #f4f4f5;
+
+  --color-primary: #f87171; /* Rojo más suave para modo oscuro */
+  --color-primary-container: #450a0a;
+  --color-on-primary-container: #fca5a5;
+  --color-surface-tint: #ef4444;
+  --color-inverse-surface: #f4f4f5;
+  --color-inverse-on-surface: #09090b;
+  --color-inverse-primary: #ef4444;
+  --color-tertiary: #ef4444;
+  --color-tertiary-container: #450a0a;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #fca5a5;
+}
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-primary-container: var(--color-primary-container);
+  --color-on-primary-container: var(--color-on-primary-container);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-container: var(--color-secondary-container);
+  --color-on-secondary-container: var(--color-on-secondary-container);
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-container: var(--color-surface-container);
+  --color-surface-container-low: var(--color-surface-container-low);
+  --color-surface-container-high: var(--color-surface-container-high);
+  --color-surface-container-highest: var(--color-surface-container-highest);
+  --color-on-surface: var(--color-on-surface);
+  --color-on-background: var(--color-on-background);
+  --color-on-surface-variant: var(--color-on-surface-variant);
+  --color-outline-variant: var(--color-outline-variant);
+  --color-outline: var(--color-outline);
+  --color-error: var(--color-error);
+  --color-error-container: var(--color-error-container);
+  --color-on-error: var(--color-on-error);
+  --color-surface-tint: var(--color-surface-tint);
+  --color-inverse-surface: var(--color-inverse-surface);
+  --color-inverse-on-surface: var(--color-inverse-on-surface);
+  --color-inverse-primary: var(--color-inverse-primary);
+  --color-on-primary: var(--color-on-primary);
+  --color-on-secondary: var(--color-on-secondary);
+  --color-tertiary: var(--color-tertiary);
+  --color-tertiary-container: var(--color-tertiary-container);
+  --color-on-tertiary: var(--color-on-tertiary);
+  --color-on-tertiary-container: var(--color-on-tertiary-container);
+
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+}
+
+/* Mejoras de legibilidad en tipografía y letras */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800; /* Letras más robustas y elegantes */
+  letter-spacing: -0.02em;
+}
+
+p, span, td, th {
+  font-family: 'Inter', sans-serif;
+}
+
+label {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* Sobrescribir bordes para que resalten en modo claro con un negro puro y nítido */
+.border-outline-variant {
+  border-color: var(--color-outline-variant) !important;
+}
+
+/* Efecto de relieve ligero (shadow) para que las tarjetas destaquen sobre el fondo */
+.bg-surface, .bg-surface-container-lowest {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Inputs y Selects definidos con borde negro */
+input[type="text"], input[type="number"], select, textarea {
+  border: 1px solid var(--color-outline-variant) !important;
+  color: var(--color-on-surface) !important;
+  background-color: var(--color-surface) !important;
+  transition: all 0.15s ease-in-out;
+}
+
+input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-container) !important;
+}

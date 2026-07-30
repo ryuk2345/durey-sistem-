@@ -1,0 +1,250 @@
+
+<div class="max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-xl gap-md">
+<div>
+<span class="text-primary font-label-md tracking-wider uppercase">Inventario y Configuración</span>
+<h2 class="font-display-lg text-display-lg text-on-surface mt-1">Catálogo y Codificación SKU</h2>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-2 bg-primary text-white px-lg py-2 rounded-lg font-body-md hover:bg-on-primary-fixed-variant transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Nuevo Producto
+                    </button>
+<button class="flex items-center gap-2 border border-outline text-on-surface-variant px-lg py-2 rounded-lg font-body-md hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+                        Exportar
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- SKU GENERATOR CARD (Asymmetric left) -->
+<div class="lg:col-span-5 bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col">
+<div class="p-lg border-b border-outline-variant bg-surface-container-lowest">
+<h3 class="font-headline-sm text-headline-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">barcode_scanner</span>
+                            Generador de SKU Dinámico
+                        </h3>
+<p class="font-body-md text-on-surface-variant">Configure los parámetros para generar un nuevo código único.</p>
+</div>
+<div class="p-lg space-y-lg flex-1">
+<!-- Dropdowns -->
+<div class="grid grid-cols-2 gap-md">
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Categoría</label>
+<select class="w-full bg-white border border-outline-variant rounded-lg p-2 font-body-md focus:ring-2 focus:ring-primary-container outline-none" id="cat-select">
+<option value="NIN">Niño/Niña</option>
+<option value="CAB">Caballero</option>
+<option value="DAM">Dama</option>
+<option value="BEB">Bebé</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Talla</label>
+<select class="w-full bg-white border border-outline-variant rounded-lg p-2 font-body-md focus:ring-2 focus:ring-primary-container outline-none" id="talla-select">
+<option value="ENT">Entera</option>
+<option value="EXT">Extra</option>
+<option value="UNI">Unica</option>
+<option value="MIN">Mini</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Diseño</label>
+<select class="w-full bg-white border border-outline-variant rounded-lg p-2 font-body-md focus:ring-2 focus:ring-primary-container outline-none" id="dis-select">
+<option value="DEL">Deluxe</option>
+<option value="BAS">Básico</option>
+<option value="ESP">Especial</option>
+<option value="RAY">Rayado</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Calidad</label>
+<select class="w-full bg-white border border-outline-variant rounded-lg p-2 font-body-md focus:ring-2 focus:ring-primary-container outline-none" id="cal-select">
+<option value="04">Afelpada (04)</option>
+<option value="01">Delgada (01)</option>
+<option value="02">Media (02)</option>
+</select>
+</div>
+</div>
+<!-- Real-time Preview -->
+<div class="sku-card-gradient rounded-xl p-xl text-center shadow-lg transform transition-all hover:scale-[1.02]">
+<p class="font-label-md text-on-primary-container opacity-80 uppercase tracking-widest mb-2">Previsualización de SKU</p>
+<div class="font-display-lg text-white text-[32px] tracking-tighter" id="sku-display">NIN-ENT-DEL-04</div>
+<div class="mt-4 flex justify-center gap-md">
+<button class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
+<button class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">qr_code_2</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- TABLE SECTION (Asymmetric right) -->
+<div class="lg:col-span-7 bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h3 class="font-headline-sm text-headline-sm">Inventario de Productos</h3>
+<div class="flex gap-2">
+<button class="flex items-center gap-1 border border-outline-variant px-3 py-1.5 rounded-lg text-body-md bg-white hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                                Filtros
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-lg py-4 font-label-md text-on-surface-variant uppercase tracking-wider">SKU</th>
+<th class="px-lg py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Producto</th>
+<th class="px-lg py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Calidad</th>
+<th class="px-lg py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Stock</th>
+<th class="px-lg py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-lg py-4">
+<span class="font-data-mono text-primary font-bold">NIN-ENT-DEL-04</span>
+</td>
+<td class="px-lg py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up photograph of high-quality children's stockings with a soft fuzzy texture in a pastel blue color, focusing on the refined knitting pattern and plush finish under professional studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCokpNAhVAmcg5KDJ0qaV8_4ttkxpNHbJqeL0Mai4fIqwjeHuVAbK4bLkYirl53mNPbY1QnK5V__whsBGecXhbEboo8bJZFeKJGI8QdFeJfTn2zu6NJn269F_SxRJEE-AaCP4qqXgNiNW6eOU4pec9HCfKPp8Ra-NXevOf4pvTj-SHLRsyYY105mcgttvJyDTRZ-JC-l4lKngo-xOnA4dxUuisDsn3Z2go0R95crrNNv8-VjQMxSgNu9n7r0Nb_hR0qHlPdIIf6JiY"/>
+</div>
+<div>
+<p class="font-body-md font-semibold">Media Niño Entera</p>
+<p class="text-xs text-on-surface-variant">Deluxe Collection</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100">
+                                            Afelpada
+                                        </span>
+</td>
+<td class="px-lg py-4">
+<span class="font-data-mono text-right">1,240 <small class="text-on-surface-variant">uds</small></span>
+</td>
+<td class="px-lg py-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-lg py-4">
+<span class="font-data-mono text-primary font-bold">DAM-UNI-BAS-01</span>
+</td>
+<td class="px-lg py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro studio shot of thin black lady stockings displayed on a white background, highlighting the delicate semi-transparent fabric and high-tension weave, capturing a professional industrial product photography aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeBm10n5bM_xpA-1ofDZH8WN6jTbSDi-dRjWxs4tl2G8Ewf8SDE98HSVH9p8PDad7xIGhA9wtrFN_hmQflvCauRwxAYYoM3gpj7i-mcIJNst2L8gDL-FamQqPi4UqCOCqe8HPqcXTbMYq3e6KHYYc8M-tHA1Mj_6ACyo4kel3cbwRv8oHEs35fJrAbsRomO40zjT6K_Iu0nRtL__03J1OkI0bYzxNsf4miGAEoAtun75lb9rskF4vuCgIf6yJ6FuOFuQEl8VBz-R8"/>
+</div>
+<div>
+<p class="font-body-md font-semibold">Media Dama Unica</p>
+<p class="text-xs text-on-surface-variant">Básicos Diarios</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                            Delgada
+                                        </span>
+</td>
+<td class="px-lg py-4">
+<span class="font-data-mono text-right">856 <small class="text-on-surface-variant">uds</small></span>
+</td>
+<td class="px-lg py-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="px-lg py-4">
+<span class="font-data-mono text-primary font-bold">CAB-EXT-RAY-02</span>
+</td>
+<td class="px-lg py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Top view of striped men socks with a grey and charcoal pattern, neatly folded on a clean slate surface, showing the medium-weight quality fabric and precise industrial stitching with even light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrSlQe9TJZf2zpWduXDK9XfBx3K6M_3lg8kAUFziTPyoARrQyblz8RdqbuU2IvCHcNl0ZBwRjBu5MlfMqZjAF3miIYgNm5rcftnVhIovN-uJEO6t_8XZ1Xa5aflmJdBtE1ULvghyfJouB7RAVKlO2lvcYNopQqb5KMqQOm6Ilq2juMXefUfFCYpa9mqSJlxxVwLbsEOWTVqYMbXzUrpFvpLZ49CuQmpd5avS0Xwe2MrAH-GVQRzZFFlZ0hWjkE-cVG75lIlAzpL4E"/>
+</div>
+<div>
+<p class="font-body-md font-semibold">Calcetín Caballero</p>
+<p class="text-xs text-on-surface-variant">Rayado Especial</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-100">
+                                            Media
+                                        </span>
+</td>
+<td class="px-lg py-4">
+<span class="font-data-mono text-right">2,104 <small class="text-on-surface-variant">uds</small></span>
+</td>
+<td class="px-lg py-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-lg border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<p class="text-on-surface-variant font-body-md">Mostrando 3 de 145 productos</p>
+<div class="flex gap-2">
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Dashboard Stats Summary -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg mt-xl">
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-primary-fixed text-primary flex items-center justify-center">
+<span class="material-symbols-outlined">category</span>
+</div>
+<div>
+<p class="text-on-surface-variant font-label-md">Total SKU</p>
+<h4 class="text-headline-sm font-bold">145</h4>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined">waves</span>
+</div>
+<div>
+<p class="text-on-surface-variant font-label-md">Afelpada</p>
+<h4 class="text-headline-sm font-bold">62</h4>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined">layers</span>
+</div>
+<div>
+<p class="text-on-surface-variant font-label-md">Delgada</p>
+<h4 class="text-headline-sm font-bold">83</h4>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+<span class="material-symbols-outlined">trending_up</span>
+</div>
+<div>
+<p class="text-on-surface-variant font-label-md">Nuevos (Mes)</p>
+<h4 class="text-headline-sm font-bold">+12</h4>
+</div>
+</div>
+</div>
+</div>

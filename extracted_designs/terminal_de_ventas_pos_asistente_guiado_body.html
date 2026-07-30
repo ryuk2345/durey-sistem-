@@ -1,0 +1,265 @@
+
+<!-- TopAppBar -->
+<header class="sticky top-0 z-30 w-full bg-surface dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline flex justify-between items-center px-lg py-sm">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface dark:text-on-surface-variant">Venta de Terminal</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined text-primary" style="font-size: 18px;">store</span>
+<span class="text-body-md font-medium">Caja Principal</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim flex items-center justify-center overflow-hidden border border-outline">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a professional male factory administrator in a clean modern office, soft high-key lighting, professional corporate photography style, wearing a subtle navy uniform with a Medias Durey logo." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDlL2VLlM1PuwdNNqP7sk7qsZft7iG1ALUqWGcb6NYldCDy4G75zw2jamw-j0-cMlVRjpzGK7ngZtTzwerJxouPLa0hyVk6VtNffIvuntcdGHDohJvbZi-vx4kQoK5W2Ac_guBfcQrDMvgKuzmkaScYhtdEmp5oyR3gqdg8P7R_iI6q2gFXDaPx4e1U9fiNHfRRXJrMH3WYxBhBjTPefvN0nJwEMRN1ySrWcg_vzl5vtt5OH-bjJWM077c7JNmdcSuCqUcrxEjyc8"/>
+</div>
+</div>
+</div>
+</header>
+<!-- POS Canvas -->
+<div class="flex-1 p-lg overflow-y-auto bg-slate-50 relative">
+<!-- Alert Section (Overdue Debt) -->
+<div class="hidden mb-6 p-4 bg-error-container border-l-4 border-error rounded-lg flex items-center justify-between animate-pulse" id="debt-alert">
+<div class="flex items-center gap-4 text-on-error-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div>
+<p class="font-bold font-headline-sm">BLOQUEO: Deuda Vencida</p>
+<p class="text-body-md">El cliente presenta facturas impagas. Se requiere autorización de supervisor.</p>
+</div>
+</div>
+<button class="px-6 py-2 bg-error text-white font-bold rounded-lg hover:bg-red-800 transition-colors flex items-center gap-2" onclick="showSupervisorModal()">
+<span class="material-symbols-outlined">lock_open</span>
+                    Autorizar
+                </button>
+</div>
+<!-- Stepper Progress -->
+<div class="max-w-4xl mx-auto mb-10">
+<div class="flex items-center justify-between relative">
+<div class="absolute top-1/2 left-0 w-full h-1 bg-outline-variant -translate-y-1/2 z-0"></div>
+<div class="absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 z-0 transition-all duration-500" id="progress-line" style="width: 0%;"></div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="step-circle w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
+<span class="mt-2 text-label-md font-bold text-primary">Categorías</span>
+</div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="step-circle w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold">2</div>
+<span class="mt-2 text-label-md font-bold text-on-surface-variant">Tallas</span>
+</div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="step-circle w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold">3</div>
+<span class="mt-2 text-label-md font-bold text-on-surface-variant">Diseño</span>
+</div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="step-circle w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold">4</div>
+<span class="mt-2 text-label-md font-bold text-on-surface-variant">Pago</span>
+</div>
+</div>
+</div>
+<!-- Wizard Container -->
+<div class="max-w-5xl mx-auto">
+<!-- Step 1: Categorías -->
+<div class="step-content show-step" id="step-1">
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+<button class="group flex flex-col bg-white rounded-xl shadow-sm border border-outline-variant hover:border-primary hover:shadow-md transition-all p-4 items-center text-center" onclick="nextStep(2)">
+<div class="w-full aspect-square rounded-lg bg-surface-container-low mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Minimalist professional product photography of adult cotton socks displayed neatly on a white platform, bright industrial studio lighting, neutral slate tones with high contrast, sharp focus, textile texture visible." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRgKTiKdsfTuA00u-9CvGoMudRr16Qk8AQpfUAlCiYbjyT778YjIL2s0sOczBzuIWp1OfCNKq-hOFMayUByF30BqxjvQ4iFttsL31rDT6hsJ_7907G6E_sRy1dVXYFp9L-YaszX2Tc4qXspQ_oGJFd_jsQlrk0og4zz3PNFu2Y8Qkdw9pkCI0AEeX7oRGlmP76DnGJ6gk6nsawnaP1T0T54CPLWVenR0xtVbshLIRNpQ4j1V4z-PESQdEbyuHzanGP3khY9FJHQ6w"/>
+</div>
+<span class="font-headline-sm font-bold text-on-surface">Adultos</span>
+</button>
+<button class="group flex flex-col bg-white rounded-xl shadow-sm border border-outline-variant hover:border-primary hover:shadow-md transition-all p-4 items-center text-center" onclick="nextStep(2)">
+<div class="w-full aspect-square rounded-lg bg-surface-container-low mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Playful yet professional photography of colorful children socks with striped patterns, set against a clean minimalist light grey background, soft daylight, sharp focus on premium cotton knit texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX1mQDawTL2RPTcN2DnAbik8w2t-Gh7QJ403Ktac4GtOkXpEMjTmhQHCGGtZnfym3ZTCmrSySw0lLRchEROB-FK7Br0IycrAYXymLyc9D1ymt7kOKA7f7jsEasViiJLlxh5DMhUeRugLRjIYkJhDzmIlA5UvXwP6KgiSNlQmq1aih-_1LuNx9Ck7Q3PQAU1lroCfh6VmP8_CaDnXsgR2pavwdJyh0Bsxd_2AYY1cJgmViMnDHn9QZbz3EW1vpwBPnuvPGuTJv8Yfo"/>
+</div>
+<span class="font-headline-sm font-bold text-on-surface">Niños</span>
+</button>
+<button class="group flex flex-col bg-white rounded-xl shadow-sm border border-outline-variant hover:border-primary hover:shadow-md transition-all p-4 items-center text-center" onclick="nextStep(2)">
+<div class="w-full aspect-square rounded-lg bg-surface-container-low mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Soft-focus photography of delicate organic cotton baby socks in pastel tones, minimalist nursery setting, high-key lighting, emphasizing softness and high-quality manufacturing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpaZ2zLpy5sZ_6yeDbCtmCdkDo1kThcSj9n4BPvItj_VDzp3oSk2-KwT7KwPlhZlxPe-dT_Dtt6oZLW62SexvqglAP0RhDikYzQ408g3tNzldl8xRuzKiQAaSCRTYgt6VjfnDfhaQpyrkC6HupxTqvOp5ajk91ayO8XZj0cdRAM0YKEbsKpP8VfxnO6BZiPXFQPX2Fn5XM_JpDFfs09dwXswkWTGbTm6JTfz5vUxVFXAEmcDVgeIJJ9WJ0sjFywrMGJ7NGpj_w9zM"/>
+</div>
+<span class="font-headline-sm font-bold text-on-surface">Bebes</span>
+</button>
+<button class="group flex flex-col bg-white rounded-xl shadow-sm border border-outline-variant hover:border-primary hover:shadow-md transition-all p-4 items-center text-center" onclick="nextStep(2)">
+<div class="w-full aspect-square rounded-lg bg-surface-container-low mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Elegant display of ladies' fashion hosiery and ankle socks, premium nylon and cotton textures, stylish studio setup with soft directional lighting, modern minimalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFEZJAk4xR2tuhUrbAMMzoYMXUpGVcwO_BrhCcEG_seZWmAMBS02SFc8A6NXd4hlpl4BbqwcdEX0F03rUXgOXwKg1FwhY00om_AZ73hGhKPIfpUsFFSbMXx6tLbjZ6HhL2eYGL-RNKtYkP5B1AmcUNoJ-JilUEB0fRXYZv4FMzwsQneemKWXM-gxPhVjD4G6oLh6wYxZWDHCD9bDhgXUDxeZiciCMWH43Ia3LSvGXsEqaKAC_UjKFR8ku7WBSGJBNe1W75SA3caXM"/>
+</div>
+<span class="font-headline-sm font-bold text-on-surface">Damas</span>
+</button>
+<button class="group flex flex-col bg-white rounded-xl shadow-sm border border-outline-variant hover:border-primary hover:shadow-md transition-all p-4 items-center text-center" onclick="nextStep(2)">
+<div class="w-full aspect-square rounded-lg bg-surface-container-low mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="High-performance athletic soccer socks with compression zones, technical sports photography, dynamic lighting, showcasing durability and professional sports grade textile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADeZ_e-SSEMIz8zk13H2QWpO5gZ5ba4-eHC7-apC8r63t9ZbAfelncsSUrDmJOsBbD29i73aXqeXc7SxKThg4j_M44OelZSTqK-ohpYY-IWh-24_W-U4XoEpABuCytBscQfi1vpDUHdo4RDdn0RUqufiar8YSf1HYOj7H7cWBTKacx5zSKDM3VB4R6wf9NgvKhtyRyaqhRFLGOyfrcsiv38GaqrMngYCmOnH4CvCq_oLmFCGzUbubijG8L4QFa47zUc7LTmmDa6Hg"/>
+</div>
+<span class="font-headline-sm font-bold text-on-surface">Fútbol</span>
+</button>
+</div>
+</div>
+<!-- Step 2: Selector de Tallas -->
+<div class="step-content hide-step" id="step-2">
+<div class="bg-white p-8 rounded-2xl shadow-sm border border-outline-variant">
+<h3 class="font-headline-md mb-8 text-center">Seleccione la Talla</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<button class="py-6 border-2 border-outline-variant rounded-xl font-bold text-headline-sm hover:border-primary hover:text-primary transition-all active:scale-95" onclick="nextStep(3)">36-38</button>
+<button class="py-6 border-2 border-outline-variant rounded-xl font-bold text-headline-sm hover:border-primary hover:text-primary transition-all active:scale-95" onclick="nextStep(3)">39-41</button>
+<button class="py-6 border-2 border-outline-variant rounded-xl font-bold text-headline-sm hover:border-primary hover:text-primary transition-all active:scale-95" onclick="nextStep(3)">42-44</button>
+<button class="py-6 border-2 border-primary bg-primary-container text-white rounded-xl font-bold text-headline-sm shadow-lg active:scale-95" onclick="nextStep(3)">45-47</button>
+<button class="col-span-full py-6 bg-surface-container-low border-2 border-dashed border-outline rounded-xl font-bold text-headline-sm hover:bg-surface-container-high transition-all active:scale-95" onclick="nextStep(3)">Talla Única</button>
+</div>
+<div class="mt-10 flex justify-start">
+<button class="flex items-center gap-2 text-primary font-bold hover:underline" onclick="nextStep(1)">
+<span class="material-symbols-outlined">arrow_back</span> Volver a Categorías
+                            </button>
+</div>
+</div>
+</div>
+<!-- Step 3: Diseño y Calidad -->
+<div class="step-content hide-step" id="step-3">
+<div class="bg-white p-8 rounded-2xl shadow-sm border border-outline-variant">
+<div class="grid md:grid-cols-2 gap-12">
+<div>
+<h3 class="font-headline-sm mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">palette</span> Diseño
+                                </h3>
+<div class="space-y-4">
+<label class="flex items-center p-4 border-2 border-outline-variant rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+<input checked="" class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="design" type="radio"/>
+<div class="ml-4">
+<p class="font-bold">Entero / Unicolor</p>
+<p class="text-body-md text-on-surface-variant">Tejido básico sin patrones adicionales</p>
+</div>
+</label>
+<label class="flex items-center p-4 border-2 border-primary bg-primary-container/10 rounded-xl cursor-pointer">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="design" type="radio"/>
+<div class="ml-4">
+<p class="font-bold text-primary">Con Diseño / Jacquard</p>
+<p class="text-body-md text-on-surface-variant">Patrones complejos, logos o figuras</p>
+</div>
+</label>
+</div>
+</div>
+<div>
+<h3 class="font-headline-sm mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">texture</span> Calidad
+                                </h3>
+<div class="space-y-4">
+<label class="flex items-center p-4 border-2 border-outline-variant rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+<input checked="" class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="quality" type="radio"/>
+<div class="ml-4">
+<p class="font-bold">Delgada / Verano</p>
+<p class="text-body-md text-on-surface-variant">Máxima transpirabilidad y ligereza</p>
+</div>
+</label>
+<label class="flex items-center p-4 border-2 border-outline-variant rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="quality" type="radio"/>
+<div class="ml-4">
+<p class="font-bold">Afelpada / Invierno</p>
+<p class="text-body-md text-on-surface-variant">Interior térmico acolchado extra suave</p>
+</div>
+</label>
+</div>
+</div>
+</div>
+<div class="mt-12 flex justify-between items-center">
+<button class="flex items-center gap-2 text-on-surface-variant font-bold hover:underline" onclick="nextStep(2)">
+<span class="material-symbols-outlined">arrow_back</span> Anterior
+                            </button>
+<button class="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-800 transition-colors active:scale-95" onclick="nextStep(4)">
+                                Ver Resumen de Venta
+                            </button>
+</div>
+</div>
+</div>
+<!-- Step 4: Resumen y Pago -->
+<div class="step-content hide-step" id="step-4">
+<div class="grid lg:grid-cols-3 gap-8">
+<!-- Summary Column -->
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant">
+<h3 class="font-headline-sm mb-4 border-b pb-2 border-outline-variant">Detalle del Producto</h3>
+<div class="flex gap-6 items-center">
+<div class="w-32 h-32 rounded-lg bg-surface-container-low overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="High-resolution flat lay of athletic navy blue socks, showing the jacquard logo detail and ribbing, clean studio photography on a light grey background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG2r-9skA2M1-WfWUim7AfqEaGgPAJEab4vMGvwM5s1O1rA55-Brk7FzerEgvlMHMHAgZz1duxVRB8ZfZtsMZtGNUI5Ck7ZHDozPuuIvDEgv9ObsByHlP6dnIt_WuXIJ2Vn-z2_AekcQBvt4nSr6aXMG3fBLpGH44f8MYZ3l9uPZmWi78d17MeateV_w2Rp36fAMa269OjFMv9sTG7cQaZBN9KEfy0_oY1hULWKxKhKJZdxRq1YMZpPsHJHFa1_CLF9RGhoiCIQ-g"/>
+</div>
+<div class="flex-1">
+<p class="text-label-md text-primary font-bold uppercase">Categoría: Adultos</p>
+<p class="font-headline-sm font-bold">Media Deportiva Premium</p>
+<div class="grid grid-cols-2 gap-x-4 mt-2">
+<p class="text-body-md text-on-surface-variant">Talla: <span class="text-on-surface font-semibold">45-47</span></p>
+<p class="text-body-md text-on-surface-variant">Calidad: <span class="text-on-surface font-semibold">Afelpada</span></p>
+<p class="text-body-md text-on-surface-variant">Diseño: <span class="text-on-surface font-semibold">Jacquard</span></p>
+<p class="text-body-md text-on-surface-variant">Precio Unit: <span class="text-on-surface font-semibold">S/ 12.50</span></p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant">
+<h3 class="font-headline-sm mb-4">Información del Cliente</h3>
+<div class="grid md:grid-cols-2 gap-4">
+<div>
+<label class="block text-label-md font-bold text-on-surface-variant mb-1">Tipo de Doc.</label>
+<select class="w-full border-outline-variant rounded-lg focus:ring-primary focus:border-primary">
+<option>DNI</option>
+<option>RUC</option>
+<option>CE</option>
+</select>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface-variant mb-1">Nro Documento</label>
+<div class="relative">
+<input class="w-full border-outline-variant rounded-lg focus:ring-primary focus:border-primary pl-10" id="dni-input" onkeyup="checkDebt(this.value)" placeholder="Ingrese documento" type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style="font-size: 20px;">search</span>
+</div>
+</div>
+<div class="md:col-span-2">
+<label class="block text-label-md font-bold text-on-surface-variant mb-1">Nombre / Razón Social</label>
+<input class="w-full border-outline-variant rounded-lg bg-surface-container-low" readonly="" type="text" value="Juan Pérez García"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment & Total Column -->
+<div class="space-y-6">
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant">
+<h3 class="font-headline-sm mb-6">Método de Pago</h3>
+<div class="space-y-3">
+<button class="w-full py-4 px-4 border-2 border-primary bg-primary-container/10 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">payments</span>
+<span class="font-bold">Efectivo</span>
+</div>
+<span class="material-symbols-outlined text-primary">check_circle</span>
+</button>
+<button class="w-full py-4 px-4 border-2 border-outline-variant rounded-xl flex items-center gap-3 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="font-bold">Tarjeta Débito/Crédito</span>
+</button>
+<button class="w-full py-4 px-4 border-2 border-outline-variant rounded-xl flex items-center gap-3 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined">qr_code_2</span>
+<span class="font-bold">Yape / Plin</span>
+</button>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant">
+<div class="flex justify-between items-center mb-2">
+<span class="text-on-surface-variant font-medium">Subtotal</span>
+<span class="font-semibold font-data-mono">S/ 10.59</span>
+</div>
+<div class="flex justify-between items-center mb-4">
+<span class="text-on-surface-variant font-medium">IGV (18%)</span>
+<span class="font-semibold font-data-mono">S/ 1.91</span>
+</div>
+<div class="flex justify-between items-center text-primary">
+<span class="font-headline-sm font-bold">TOTAL</span>
+<span class="font-headline-md font-bold font-data-mono">S/ 12.50</span>
+</div>
+</div>
+<button class="w-full mt-8 py-4 bg-primary text-white font-bold text-headline-sm rounded-xl shadow-xl hover:bg-blue-800 transition-all active:scale-95 flex items-center justify-center gap-2" id="finish-btn">
+<span class="material-symbols-outlined">shopping_cart_checkout</span>
+                                    Completar Venta
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>

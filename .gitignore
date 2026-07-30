@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+*/node_modules/
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+
+# Build del frontend (Railway lo genera durante el deploy)
+frontend/dist/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Logs
+*.log
+npm-debug.log*

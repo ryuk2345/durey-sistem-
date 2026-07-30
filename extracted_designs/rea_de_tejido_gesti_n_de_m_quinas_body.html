@@ -1,0 +1,127 @@
+
+<div class="flex gap-gutter">
+<!-- Left Side: Interactive Grid -->
+<div class="flex-1">
+<div class="flex items-center justify-between mb-lg">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Monitor de Producción</h2>
+<p class="text-on-surface-variant">Control de máquinas en tiempo real</p>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full font-label-md border border-emerald-100">
+<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> 42 Activas
+                        </div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full font-label-md border border-amber-100">
+<span class="w-2 h-2 bg-amber-500 rounded-full"></span> 12 Mantenimiento
+                        </div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-label-md border border-rose-100">
+<span class="w-2 h-2 bg-rose-500 rounded-full"></span> 10 Alerta
+                        </div>
+</div>
+</div>
+<!-- 64 Machines Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 h-[calc(100vh-220px)] overflow-y-auto pr-2 scroll-hide">
+<!-- Machine Cards (Generated) -->
+<script>
+                        const gridContainer = document.currentScript.parentElement;
+                        const statuses = [
+                            { label: 'En Marcha', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+                            { label: 'En Pausa', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+                            { label: 'Error Crítico', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' }
+                        ];
+                        const operators = ['J. Pérez', 'A. García', 'M. López', 'R. Sánchez', 'L. Martínez'];
+                        for (let i = 1; i <= 64; i++) {
+                            const id = `M-${String(i).padStart(2, '0')}`;
+                            const status = statuses[Math.floor(Math.random() * statuses.length)];
+                            const operator = operators[Math.floor(Math.random() * operators.length)];
+                            const card = `
+                                <div class="bg-white border border-outline-variant rounded-xl p-4 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <p class="font-data-mono text-primary font-bold">${id}</p>
+                                            <p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">${operator}</p>
+                                        </div>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${status.bg} ${status.text} border ${status.border}">${status.label}</span>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="w-full bg-surface-container-low h-1 rounded-full overflow-hidden">
+                                            <div class="bg-primary h-full transition-all duration-1000" style="width: ${Math.floor(Math.random() * 100)}%"></div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button onclick="openLotModal()" class="flex-1 py-1.5 text-[11px] font-bold rounded bg-primary text-white hover:bg-primary-container transition-colors active:scale-95">INICIAR LOTE</button>
+                                            <button class="flex-1 py-1.5 text-[11px] font-bold rounded border border-outline text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-95">CLASIFICAR</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            gridContainer.insertAdjacentHTML('beforeend', card);
+                        }
+                    </script>
+</div>
+</div>
+<!-- Right Side: Side Panel -->
+<div class="w-80 space-y-gutter">
+<!-- Lot Loading Form -->
+<section class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-4">Carga de Lote</h3>
+<form class="space-y-4" onsubmit="event.preventDefault(); validateStock();">
+<div class="space-y-1.5">
+<label class="font-label-md text-on-surface-variant">Tipo de Hilo</label>
+<select class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md">
+<option>Algodón Premium 40/1</option>
+<option>Poliéster Industrial</option>
+<option>Lana Merina Mezcla</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-md text-on-surface-variant">Operador de Turno</label>
+<select class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md">
+<option>Juan Pérez (Nivel Senior)</option>
+<option>Ana García (Nivel Master)</option>
+<option>Mario López (Nivel Junior)</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-md text-on-surface-variant">Cantidad Requerida (kg)</label>
+<input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-primary text-body-md" type="number" value="5"/>
+</div>
+<div class="pt-2">
+<button class="w-full bg-primary text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95" type="submit">
+                                Validar y Cargar
+                            </button>
+</div>
+</form>
+</section>
+<!-- Status Insights Card -->
+<section class="bg-surface-container-low border border-outline-variant rounded-2xl p-6">
+<h4 class="font-label-md text-on-surface font-bold uppercase tracking-widest mb-4">Eficiencia de Planta</h4>
+<div class="space-y-6">
+<div class="flex items-end justify-between">
+<div>
+<p class="text-[32px] font-bold text-on-surface leading-none">88.4%</p>
+<p class="text-xs text-on-surface-variant mt-1">OEE Promedio</p>
+</div>
+<div class="text-emerald-600 font-bold flex items-center gap-1 text-sm">
+<span class="material-symbols-outlined text-sm">trending_up</span> +2.4%
+                            </div>
+</div>
+<div class="h-16 w-full bg-white rounded-lg flex items-end gap-1 p-2 overflow-hidden">
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[40%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[60%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[50%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[80%]"></div>
+<div class="flex-1 bg-primary rounded-t h-[95%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[70%]"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-[65%]"></div>
+</div>
+</div>
+</section>
+<div class="rounded-2xl overflow-hidden relative h-48 border border-outline-variant">
+<img class="absolute inset-0 w-full h-full object-cover brightness-75" data-alt="A clean, wide-angle interior view of a modern textile factory with rows of high-tech knitting machines. The space is exceptionally clean and well-lit with cool-toned LED lighting, reflecting off polished grey floors. The overall color palette is dominated by slate blues, greys, and whites, accented by technical indicators on machine screens." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQeAt7ZwQkVBV76N22G8Ys1iLAeVhlwRQQOOOlB5zFxmsNyMs4SAJG2ScRSQhFpv69PLxa6qPEAShDRKMImHiMH9gadhAwEmYzqcN-a5wFYFF6j-o7SstA6oqsZDoyU9PWiZnfB5jUTuwEE5OwlbgJajs0NdCE7HzmOuPEvRKdpX5tzu04lK4hfXjm78DeCnqIvpRop6Lz6pbb43cQsBpTre0-KQXlTYjssTexXfaYtCHVvbIbz5GHgxYluoZQqKYuaPi2Yr2rfLc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent p-6 flex flex-col justify-end">
+<p class="text-white font-headline-sm text-headline-sm leading-tight">Mantenimiento Preventivo</p>
+<p class="text-white/80 text-xs">Próxima ronda en 2h 15m</p>
+</div>
+</div>
+</div>
+</div>
