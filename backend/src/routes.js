@@ -210,9 +210,8 @@ router.post('/remallado/voltear', (req, res) => {
   const { lote_id } = req.body;
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
-  if (lote.estado !== 'Listo para Volteado') return res.status(400).json({ error: `Estado "${lote.estado}", se esperaba "Listo para Volteado"` });
-  lote.estado = 'Listo para Planchado';
-  res.json({ message: 'Lote volteado y listo para planchar', lote });
+  lote.estado = 'Listo para Remallado';
+  res.json({ message: 'Lote volteado y enviado a Costura (Remallado)', lote });
 });
 
 router.post('/remallado/procesar', (req, res) => {
@@ -221,9 +220,8 @@ router.post('/remallado/procesar', (req, res) => {
   if (!operario) return res.status(404).json({ error: 'Operario no encontrado' });
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
-  if (lote.estado !== 'Listo para Remallado') return res.status(400).json({ error: `Estado "${lote.estado}", se esperaba "Listo para Remallado"` });
   
-  lote.estado = 'Remallado';
+  lote.estado = 'Listo para Planchado';
   const cant = parseInt(cantidad) || 0;
   const pago = (cant * operario.tarifa).toFixed(2);
   operario.docenas_remalladas = (operario.docenas_remalladas || 0) + cant;
@@ -241,7 +239,7 @@ router.post('/remallado/procesar', (req, res) => {
   }
 
   io.emit('maquinas_actualizadas', { maquinas: d.maquinas });
-  res.json({ message: 'Costura completada en remalladora', operario: operario.nombre, tarifa: operario.tarifa, cantidad_remallada: cant, pago_neto: parseFloat(pago), lote });
+  res.json({ message: 'Costura completada en remalladora. Lote enviado a Planchado', operario: operario.nombre, tarifa: operario.tarifa, cantidad_remallada: cant, pago_neto: parseFloat(pago), lote });
 });
 
 // ACABADO
@@ -249,10 +247,9 @@ router.post('/acabado/planchar', (req, res) => {
   const { lote_id } = req.body;
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
-  if (lote.estado !== 'Listo para Planchado') return res.status(400).json({ error: `Estado "${lote.estado}", se esperaba "Listo para Planchado"` });
-  lote.estado = 'Listo para Remallado';
+  lote.estado = 'Remallado';
   io.emit('maquinas_actualizadas');
-  res.json({ message: 'Lote planchado y enviado a costura', lote });
+  res.json({ message: 'Lote planchado y enviado a Control de Calidad', lote });
 });
 
 router.post('/acabado/inspeccionar', (req, res) => {

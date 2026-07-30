@@ -1269,10 +1269,10 @@ function App() {
       } catch { addNotification('Error de red', 'error'); }
     } else {
       setBackendState(prev => {
-        const newLotes = prev.lotes.map(l => l.id === loteId ? { ...l, estado: 'Listo para Planchado' } : l);
+        const newLotes = prev.lotes.map(l => l.id === loteId ? { ...l, estado: 'Listo para Remallado' } : l);
         return { ...prev, lotes: newLotes };
       });
-      addNotification(`Lote #${loteId} volteado (simulado)`, 'success');
+      addNotification(`Lote #${loteId} volteado y enviado a Costura`, 'success');
     }
     fetchData();
   };
@@ -1290,7 +1290,7 @@ function App() {
       } catch { addNotification('Error de red', 'error'); }
     } else {
       setBackendState(prev => {
-        const newLotes = prev.lotes.map(l => l.id === loteId ? { ...l, estado: 'Listo para Remallado' } : l);
+        const newLotes = prev.lotes.map(l => l.id === loteId ? { ...l, estado: 'Remallado' } : l);
         return { ...prev, lotes: newLotes };
       });
       addNotification(`Lote #${loteId} planchado (simulado)`, 'success');
@@ -2512,7 +2512,7 @@ function App() {
                           className="w-full mt-1 p-2 border border-outline-variant bg-surface rounded-lg text-xs"
                         >
                           <option value="">-- Seleccionar Lote --</option>
-                          {backendState.lotes.filter(l => l.estado === 'Listo para Remallado' || l.estado === 'Tejiendo').map(l => (
+                          {backendState.lotes.filter(l => ['Listo para Remallado', 'Listo para Volteado', 'Tejiendo'].includes(l.estado)).map(l => (
                             <option key={l.id} value={l.id}>Lote #{l.id} ({l.cantidad_pares_estimada} pares - {l.material} {l.color})</option>
                           ))}
                         </select>
@@ -3341,8 +3341,8 @@ function App() {
                         const stepNum = 
                           l.estado === 'Tejiendo' ? 1 :
                           l.estado === 'Listo para Volteado' ? 2 :
-                          l.estado === 'Listo para Planchado' ? 3 :
-                          l.estado === 'Listo para Remallado' ? 4 :
+                          l.estado === 'Listo para Remallado' ? 3 :
+                          l.estado === 'Listo para Planchado' ? 4 :
                           l.estado === 'Remallado' ? 5 :
                           l.estado === 'Aprobado para Preparado' ? 6 :
                           l.estado === 'Empacado' ? 7 : 7;
@@ -3357,17 +3357,17 @@ function App() {
                               <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase border ${
                                 l.estado === 'Tejiendo' ? 'bg-amber-50 text-amber-800 border-amber-200' :
                                 l.estado === 'Listo para Volteado' ? 'bg-blue-50 text-blue-800 border-blue-200 font-bold' :
-                                l.estado === 'Listo para Planchado' ? 'bg-yellow-50 text-yellow-800 border-yellow-200 font-bold' :
                                 l.estado === 'Listo para Remallado' ? 'bg-indigo-50 text-indigo-800 border-indigo-200 font-bold' :
+                                l.estado === 'Listo para Planchado' ? 'bg-yellow-50 text-yellow-800 border-yellow-200 font-bold' :
                                 l.estado === 'Remallado' ? 'bg-cyan-50 text-cyan-800 border-cyan-200' :
                                 l.estado === 'Aprobado para Preparado' ? 'bg-purple-50 text-purple-800 border-purple-200' :
                                 'bg-emerald-50 text-emerald-800 border-emerald-200'
                               }`}>
                                 {l.estado === 'Tejiendo' ? '1. Tejido' : 
                                  l.estado === 'Listo para Volteado' ? '2. Espera Volteado' :
-                                 l.estado === 'Listo para Planchado' ? '3. Espera Planchado' :
-                                 l.estado === 'Listo para Remallado' ? '4. Espera Costura' :
-                                 l.estado === 'Remallado' ? '5. Costura Terminada' :
+                                 l.estado === 'Listo para Remallado' ? '3. Espera Costura' :
+                                 l.estado === 'Listo para Planchado' ? '4. Espera Planchado' :
+                                 l.estado === 'Remallado' ? '5. En Control de Calidad' :
                                  l.estado === 'Aprobado para Preparado' ? '6. QA Aprobado' :
                                  '7. Empacado (Listo)'}
                               </span>
