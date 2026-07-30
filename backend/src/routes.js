@@ -15,13 +15,12 @@ router.post('/auth/login', (req, res) => {
   res.json({ token: user.username, usuario: { id: user.id, nombre: user.nombre_completo, rol: user.rol } });
 });
 
-// RESET
-router.post('/reset', (req, res) => {
+// RESET COMPLETO A CERO
+router.post('/reset', async (req, res) => {
   d.operarios.length = 0;
   d.maestro_modelos.length = 0;
   d.planilla_inventario.forEach(p => { p.ingresos = {}; p.ventas = {}; p.stock = p.inicial; });
   d.inventario_hilo.length = 0;
-  d.resetHilo().forEach(h => d.inventario_hilo.push(h));
   d.bultos_master.length = 0;
   d.lotes_produccion.length = 0;
   d.clientes.length = 0;
@@ -31,9 +30,15 @@ router.post('/reset', (req, res) => {
   d.recepcion_materia_prima.length = 0;
   d.historico_traslados.length = 0;
   d.cronograma_cuotas.length = 0;
+  if (d.distribucion_hilo) d.distribucion_hilo.length = 0;
+  if (d.proveedores_hilo) d.proveedores_hilo.length = 0;
   d.maquinas.forEach(m => { m.estado = 'Inactiva'; m.encargado_id = null; });
   d.salones.forEach(s => { s.bultos_actuales = 0; });
-  res.json({ message: 'Datos limpiados a cero.' });
+  
+  await db.resetAll();
+  
+  io.emit('stateUpdate', { message: 'Reset general a cero ejecutado.' });
+  res.json({ message: 'Todos los datos del sistema han sido limpiados a cero correctamente.' });
 });
 
 // MAQUINAS & OPERARIOS

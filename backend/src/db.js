@@ -49,6 +49,25 @@ const db = {
     if (!useDb || !pool) return null;
     return pool.query(text, params);
   },
+
+  resetAll: async () => {
+    if (!useDb || !pool) return;
+    try {
+      await pool.query(`
+        TRUNCATE TABLE 
+          lotes_produccion, distribucion_hilo, bultos_master, detalle_orden_venta,
+          cronograma_cuotas, ordenes_venta, clientes, ordenes_compra,
+          recepcion_materia_prima, bitacora_fallas, historico_traslados,
+          proveedores_hilo, inventario_hilo, operarios RESTART IDENTITY CASCADE;
+        UPDATE maquinas SET estado = 'Inactiva', encargado_id = NULL;
+        UPDATE salones SET bultos_actuales = 0;
+        UPDATE planilla_inventario SET inicial = 0, stock = 0, ingresos = '{}', ventas = '{}';
+      `);
+      console.log('PostgreSQL Database reset successfully to zero.');
+    } catch (err) {
+      console.error('Error resetting PostgreSQL DB:', err);
+    }
+  },
   
   // Clientes operations
   getClientes: async (fallbackArray) => {
