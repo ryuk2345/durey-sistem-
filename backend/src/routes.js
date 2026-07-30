@@ -420,14 +420,23 @@ router.post('/ventas/crear', async (req, res) => {
     else { b.cantidad_paquetes -= rest; b.total_pares = b.cantidad_paquetes * 12; rest = 0; }
   }
 
-  const precio = parseFloat(precio_unitario) || 0;
+  const precio = parseFloat(precio_unitario) || 18.00;
   const montoTotal = cantPaq * precio;
   const esPorPartes = condicion === 'Por partes';
   const orden = {
-    id: d.genId(), cliente_id: cliente.id, sku, cantidad_paquetes: cantPaq, monto_total: montoTotal,
-    condicion_pago: condicion || 'Contado', medio_pago: medio_pago || 'Efectivo',
-    pago_inicial_realizado: !esPorPartes, monto_cuota_inicial: esPorPartes ? parseFloat((montoTotal * 0.2).toFixed(2)) : montoTotal,
-    estado_despacho: esPorPartes ? 'Bloqueado' : 'Listo para Enviar', estado_pago: esPorPartes ? 'Pendiente' : 'Pagado'
+    id: d.genId(),
+    cliente_id: cliente.id,
+    sku,
+    cantidad_paquetes: cantPaq,
+    precio_unitario: precio,
+    monto_total: montoTotal,
+    condicion_pago: condicion || 'Contado',
+    medio_pago: medio_pago || 'Efectivo',
+    fecha: new Date().toISOString().split('T')[0],
+    pago_inicial_realizado: !esPorPartes,
+    monto_cuota_inicial: esPorPartes ? parseFloat((montoTotal * 0.2).toFixed(2)) : montoTotal,
+    estado_despacho: esPorPartes ? 'Bloqueado' : 'Listo para Enviar',
+    estado_pago: esPorPartes ? 'Pendiente' : 'Pagado'
   };
   d.ordenes_venta.push(orden);
 
@@ -505,7 +514,10 @@ router.get('/mantenimiento/bitacora', (req, res) => {
 
 // DESPACHO
 router.get('/despacho/ordenes', (req, res) => {
-  const ordenes = d.ordenes_venta.map(o => ({ ...o, cliente: d.clientes.find(c => c.id === o.cliente_id) })).filter(o => o.estado_despacho !== 'Despachada');
+  const ordenes = d.ordenes_venta.map(o => ({
+    ...o,
+    cliente: d.clientes.find(c => c.id === o.cliente_id) || { nombre_cliente: 'Cliente Mostrador', numero_documento: '20000000000' }
+  }));
   res.json({ ordenes });
 });
 

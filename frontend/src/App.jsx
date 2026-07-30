@@ -317,6 +317,7 @@ function App() {
   // Notifications
   const [notifications, setNotifications] = useState([]);
   const [ordenesDespacho, setOrdenesDespacho] = useState([]);
+  const [ordenBoletaVer, setOrdenBoletaVer] = useState(null);
 
   const addNotification = (text, type = 'info') => {
     const newNotif = { id: `${Date.now()}-${Math.random()}`, text, type };
@@ -4933,65 +4934,98 @@ function App() {
             </div>
           )}
 
-          {/* 8. DESPACHO */}
+          {/* 8. DESPACHO & HISTORIAL DE VENTAS */}
           {activeTab === 'despacho' && (
             <div className="space-y-6">
-              <div>
-                <h2 className="font-bold text-2xl text-on-surface">Despacho de Mercadería</h2>
-                <p className="text-sm text-on-surface-variant">Control de envíos y validación de pagos pendientes.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-outline-variant pb-4">
+                <div>
+                  <h2 className="font-bold text-2xl text-on-surface">Historial de Ventas y Despacho de Mercadería</h2>
+                  <p className="text-sm text-on-surface-variant">Control de órdenes despachadas, emisión de boletas e inspección de guías.</p>
+                </div>
+                <div className="flex gap-2 text-xs font-mono font-bold">
+                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full">
+                    🟢 {ordenesDespacho.filter(o => o.estado_despacho === 'Despachada').length} Despachadas
+                  </span>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                    🔵 {ordenesDespacho.filter(o => o.estado_despacho === 'Listo para Enviar').length} Pendientes
+                  </span>
+                </div>
               </div>
+
               <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead className="bg-surface-container text-secondary font-bold uppercase text-[10px]">
                       <tr>
-                        <th className="px-4 py-3">ID Orden</th>
-                        <th className="px-4 py-3">Cliente</th>
-                        <th className="px-4 py-3">SKU</th>
-                        <th className="px-4 py-3 text-center">Paquetes</th>
-                        <th className="px-4 py-3">Condición</th>
-                        <th className="px-4 py-3">Estado Despacho</th>
-                        <th className="px-4 py-3 text-right">Acción</th>
+                        <th className="px-4 py-3">N° Orden</th>
+                        <th className="px-4 py-3">Cliente (RUC / DNI)</th>
+                        <th className="px-4 py-3">Código SKU</th>
+                        <th className="px-4 py-3 text-center">Cantidad</th>
+                        <th className="px-4 py-3 text-right">Precio / Docena</th>
+                        <th className="px-4 py-3 text-right">Monto Total</th>
+                        <th className="px-4 py-3 text-center">Condición</th>
+                        <th className="px-4 py-3 text-center">Estado Despacho</th>
+                        <th className="px-4 py-3 text-right">Comprobante / Acción</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant">
-                      {ordenesDespacho.map(o => (
-                        <tr key={o.id} className="hover:bg-surface-container-low transition-colors">
-                          <td className="px-4 py-3 font-mono font-bold text-primary">#{o.id}</td>
-                          <td className="px-4 py-3 font-semibold">{o.cliente?.nombre_cliente || 'N/A'}</td>
-                          <td className="px-4 py-3 font-mono">{o.sku}</td>
-                          <td className="px-4 py-3 text-center font-bold">{o.cantidad_paquetes}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${o.condicion_pago === 'Por partes' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                              {o.condicion_pago}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                              o.estado_despacho === 'Listo para Enviar' ? 'bg-blue-100 text-blue-800' :
-                              o.estado_despacho === 'Bloqueado' ? 'bg-rose-100 text-rose-800 animate-pulse' :
-                              'bg-emerald-100 text-emerald-800'
-                            }`}>
-                              {o.estado_despacho}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-right space-x-2">
-                            {o.estado_despacho === 'Listo para Enviar' && (
-                              <button onClick={() => handleDespachar(o.id)} className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] hover:bg-emerald-700 active:scale-95 transition shadow-sm">
-                                Enviar
+                      {ordenesDespacho.map(o => {
+                        const precioDocena = Number(o.precio_unitario || (o.monto_total / (o.cantidad_paquetes || 1)) || 18.00);
+                        const totalMonto = Number(o.monto_total || (o.cantidad_paquetes * precioDocena));
+                        return (
+                          <tr key={o.id} className="hover:bg-surface-container-low transition-colors">
+                            <td className="px-4 py-3 font-mono font-bold text-primary">#ORD-{String(o.id).padStart(4, '0')}</td>
+                            <td className="px-4 py-3">
+                              <div className="font-bold text-on-surface">{o.cliente?.nombre_cliente || o.nombre_cliente || 'Cliente Mostrador'}</div>
+                              <div className="text-[10px] text-outline font-mono">{o.cliente?.numero_documento || o.cliente_documento || '20000000000'}</div>
+                            </td>
+                            <td className="px-4 py-3 font-mono font-bold text-secondary">{o.sku}</td>
+                            <td className="px-4 py-3 text-center font-bold font-mono">
+                              {o.cantidad_paquetes} doc.
+                              <span className="block text-[9px] text-outline font-normal">({o.cantidad_paquetes * 12} prs)</span>
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-on-surface-variant">S/ {precioDocena.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">S/ {totalMonto.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${o.condicion_pago === 'Por partes' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                                {o.condicion_pago || 'Contado'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase ${
+                                o.estado_despacho === 'Despachada' ? 'bg-emerald-600 text-white' :
+                                o.estado_despacho === 'Listo para Enviar' ? 'bg-blue-100 text-blue-800' :
+                                'bg-rose-100 text-rose-800 animate-pulse'
+                              }`}>
+                                {o.estado_despacho === 'Despachada' ? '🟢 Despachada' : o.estado_despacho}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => setOrdenBoletaVer(o)}
+                                className="px-2.5 py-1 bg-surface-container-high border border-outline-variant text-on-surface rounded-lg font-bold text-[10px] hover:bg-primary/10 hover:text-primary active:scale-95 transition shadow-xs"
+                              >
+                                📄 Boleta
                               </button>
-                            )}
-                            {o.estado_despacho === 'Bloqueado' && o.condicion_pago === 'Por partes' && (
-                              <button onClick={() => handleConfirmarPagoInicial(o.id)} className="bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] hover:bg-amber-600 active:scale-95 transition shadow-sm">
-                                Confirmar Pago Inicial
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+
+                              {o.estado_despacho === 'Listo para Enviar' && (
+                                <button onClick={() => handleDespachar(o.id)} className="bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold text-[10px] hover:bg-emerald-700 active:scale-95 transition shadow-xs">
+                                  🚚 Enviar
+                                </button>
+                              )}
+                              {o.estado_despacho === 'Bloqueado' && o.condicion_pago === 'Por partes' && (
+                                <button onClick={() => handleConfirmarPagoInicial(o.id)} className="bg-amber-500 text-white px-2.5 py-1 rounded-lg font-bold text-[10px] hover:bg-amber-600 active:scale-95 transition shadow-xs">
+                                  💵 Confirmar Pago
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                       {ordenesDespacho.length === 0 && (
                         <tr>
-                          <td colSpan="7" className="text-center py-8 text-on-surface-variant font-medium">No hay órdenes pendientes de despacho.</td>
+                          <td colSpan="9" className="text-center py-8 text-on-surface-variant font-medium">No hay historial de ventas o despachos registrados aún.</td>
                         </tr>
                       )}
                     </tbody>
@@ -5875,6 +5909,130 @@ function App() {
 
             </div>
           )}
+
+        {/* Modal Boleta de Venta / Comprobante */}
+        {ordenBoletaVer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl border border-outline-variant max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
+              <button
+                type="button"
+                onClick={() => setOrdenBoletaVer(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 transition"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+
+              {/* Printable Area */}
+              <div id="boleta-imprimible" className="space-y-4 font-sans text-xs">
+                {/* Header */}
+                <div className="flex justify-between items-start border-b-2 border-primary pb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <img src="/logo_transparent.png?v=3" alt="Durey" className="h-8 w-auto" />
+                      <span className="font-black text-xl text-primary tracking-wider uppercase">DUREY</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Durey ERP — Sistema de Producción</p>
+                    <p className="text-[10px] text-slate-500">RUC: 20601234567 | Av. Gamarra 450, Lima</p>
+                  </div>
+                  <div className="text-right bg-primary/5 p-2 rounded-lg border border-primary/20">
+                    <span className="font-bold text-[10px] text-primary uppercase block">Boleta de Venta Electrónica</span>
+                    <span className="font-mono font-black text-sm text-slate-800">#B001-{String(ordenBoletaVer.id || 1).padStart(5, '0')}</span>
+                    <span className="text-[9px] text-slate-400 block mt-0.5">Fecha: {ordenBoletaVer.fecha || new Date().toISOString().split('T')[0]}</span>
+                  </div>
+                </div>
+
+                {/* Datos Cliente */}
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block">Cliente / Razón Social:</span>
+                    <span className="font-bold text-slate-800">{ordenBoletaVer.cliente?.nombre_cliente || ordenBoletaVer.nombre_cliente || 'Cliente General'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block">N° Documento (DNI/RUC):</span>
+                    <span className="font-mono font-bold text-slate-800">{ordenBoletaVer.cliente?.numero_documento || ordenBoletaVer.cliente_documento || '20000000000'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block">Condición de Pago:</span>
+                    <span className="font-bold text-primary">{ordenBoletaVer.condicion_pago || 'Contado'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase block">Medio de Pago:</span>
+                    <span className="font-bold text-emerald-700">{ordenBoletaVer.medio_pago || 'Efectivo'}</span>
+                  </div>
+                </div>
+
+                {/* Tabla Detalle */}
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-primary text-white text-[10px] uppercase font-bold">
+                      <th className="p-2 rounded-l">Código SKU / Producto</th>
+                      <th className="p-2 text-center">Cant. Docenas</th>
+                      <th className="p-2 text-right">Precio / Doc.</th>
+                      <th className="p-2 text-right rounded-r">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-slate-200">
+                      <td className="p-2 font-mono font-bold text-slate-800">
+                        {ordenBoletaVer.sku}
+                        <span className="block text-[9px] text-slate-500 font-sans font-normal">Calcetines Durey — Paquetes Empacados</span>
+                      </td>
+                      <td className="p-2 text-center font-mono font-bold">{ordenBoletaVer.cantidad_paquetes || 1} doc ({ (ordenBoletaVer.cantidad_paquetes || 1) * 12 } prs)</td>
+                      <td className="p-2 text-right font-mono">S/ {Number(ordenBoletaVer.precio_unitario || (ordenBoletaVer.monto_total / (ordenBoletaVer.cantidad_paquetes || 1)) || 18.00).toFixed(2)}</td>
+                      <td className="p-2 text-right font-mono font-bold text-emerald-700">S/ {Number(ordenBoletaVer.monto_total || 0).toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* Totales y Subtotales */}
+                <div className="flex justify-between items-end border-t pt-3 border-slate-200">
+                  <div className="space-y-1">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block">Estado del Despacho:</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                      ordenBoletaVer.estado_despacho === 'Despachada' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {ordenBoletaVer.estado_despacho === 'Despachada' ? '🟢 Despachada y Entregada' : `🔵 ${ordenBoletaVer.estado_despacho || 'En Proceso'}`}
+                    </span>
+                  </div>
+
+                  <div className="text-right space-y-1 text-xs">
+                    <div className="flex justify-between gap-4 text-slate-500 text-[11px]">
+                      <span>Op. Gravada (Subtotal):</span>
+                      <span className="font-mono font-bold">S/ {Number((ordenBoletaVer.monto_total || 0) / 1.18).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-4 text-slate-500 text-[11px]">
+                      <span>I.G.V. (18%):</span>
+                      <span className="font-mono font-bold">S/ {Number((ordenBoletaVer.monto_total || 0) - ((ordenBoletaVer.monto_total || 0) / 1.18)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-4 text-slate-900 font-black text-sm pt-1 border-t border-slate-300">
+                      <span>TOTAL A PAGAR:</span>
+                      <span className="font-mono text-primary">S/ {Number(ordenBoletaVer.monto_total || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setOrdenBoletaVer(null)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-container transition shadow-sm flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm">print</span>
+                  Imprimir Boleta
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         </main>
       </div>
