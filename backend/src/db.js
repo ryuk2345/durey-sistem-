@@ -184,21 +184,33 @@ const db = {
     if (!useDb || !pool) return lote;
     try {
       if (lote.id) {
-        const check = await pool.query('SELECT * FROM lotes_produccion WHERE id = $1', [lote.id]);
+        const check = await pool.query('SELECT id FROM lotes_produccion WHERE id = $1', [lote.id]);
         if (check.rows.length > 0) {
           const res = await pool.query(
             `UPDATE lotes_produccion 
-             SET maquina_id = $1, operario_id = $2, material = $3, color = $4, cantidad_pares_estimada = $5, cantidad_pares_primera = $6, cantidad_pares_segunda = $7, estado = $8
-             WHERE id = $9 RETURNING *`,
-            [lote.maquina_id, lote.operario_id, lote.material, lote.color, lote.cantidad_pares_estimada, lote.cantidad_pares_primera || 0, lote.cantidad_pares_segunda || 0, lote.estado, lote.id]
+             SET maquina_id = $1, operario_id = $2, material = $3, color = $4,
+                 cantidad_pares_estimada = $5, cantidad_pares_primera = $6,
+                 cantidad_pares_segunda = $7, estado = $8, sku = $9, cajas_usadas = $10
+             WHERE id = $11 RETURNING *`,
+            [lote.maquina_id, lote.operario_id || null, lote.material, lote.color,
+             lote.cantidad_pares_estimada, lote.cantidad_pares_primera || 0,
+             lote.cantidad_pares_segunda || 0, lote.estado, lote.sku || null,
+             lote.cajas_asignadas || 0, lote.id]
           );
           return res.rows[0];
         }
       }
+      // BUG-06 FIX: Incluir hilo_id (via hilos_asignados JSONB), sku, cajas_usadas
       const res = await pool.query(
-        `INSERT INTO lotes_produccion (maquina_id, operario_id, material, color, cantidad_pares_estimada, cantidad_pares_primera, cantidad_pares_segunda, estado)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-        [lote.maquina_id, lote.operario_id, lote.material, lote.color, lote.cantidad_pares_estimada, lote.cantidad_pares_primera || 0, lote.cantidad_pares_segunda || 0, lote.estado || 'Tejiendo']
+        `INSERT INTO lotes_produccion
+           (maquina_id, operario_id, material, color, cantidad_pares_estimada,
+            cantidad_pares_primera, cantidad_pares_segunda, estado, sku, cajas_usadas, hilos_asignados)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+        [lote.maquina_id, lote.operario_id || null, lote.material, lote.color,
+         lote.cantidad_pares_estimada, lote.cantidad_pares_primera || 0,
+         lote.cantidad_pares_segunda || 0, lote.estado || 'Tejiendo',
+         lote.sku || null, lote.cajas_asignadas || 0,
+         lote.hilo_id ? JSON.stringify([{ hilo_id: lote.hilo_id, cajas: lote.cajas_asignadas }]) : null]
       );
       return res.rows[0];
     } catch (err) {
@@ -212,18 +224,22 @@ const db = {
     if (!useDb || !pool) return hilo;
     try {
       if (hilo.id) {
-        const check = await pool.query('SELECT * FROM inventario_hilo WHERE id = $1', [hilo.id]);
+        const check = await pool.query('SELECT id FROM inventario_hilo WHERE id = $1', [hilo.id]);
         if (check.rows.length > 0) {
           const res = await pool.query(
-            `UPDATE inventario_hilo SET proveedor_id = $1, material = $2, color = $3, stock_cajas = $4, stock_kg = $5, costo_por_kg = $6 WHERE id = $7 RETURNING *`,
-            [hilo.proveedor_id || null, hilo.material, hilo.color, hilo.stock_cajas || 0, hilo.stock_kg || 0, hilo.costo_por_kg || 0, hilo.id]
+            `UPDATE inventario_hilo SET material = $1, color = $2, stock_cajas = $3, stock_kg = $4 WHERE id = $5 RETURNING *`,
+            [hilo.material, hilo.color, hilo.stock_cajas || 0, hilo.stock_kg || 0, hilo.id]
           );
           return res.rows[0];
         }
       }
+      // Insertar nuevo hilo — UNIQUE (color, material) maneja duplicados
       const res = await pool.query(
-        `INSERT INTO inventario_hilo (proveedor_id, material, color, stock_cajas, stock_kg, costo_por_kg) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [hilo.proveedor_id || null, hilo.material, hilo.color, hilo.stock_cajas || 0, hilo.stock_kg || 0, hilo.costo_por_kg || 0]
+        `INSERT INTO inventario_hilo (material, color, stock_cajas, stock_kg, umbral_minimo)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (color, material) DO UPDATE SET stock_cajas = EXCLUDED.stock_cajas, stock_kg = EXCLUDED.stock_kg
+         RETURNING *`,
+        [hilo.material, hilo.color, hilo.stock_cajas || 0, hilo.stock_kg || 0, hilo.umbral_minimo || 2]
       );
       return res.rows[0];
     } catch (err) {
@@ -270,6 +286,100 @@ const db = {
     } catch (err) {
       console.error('Error saving falla to DB:', err);
       return falla;
+    }
+  },
+
+  // BUG-02 FIX: Persistir Orden de Venta en PostgreSQL
+  saveOrden: async (orden) => {
+    if (!useDb || !pool) return orden;
+    try {
+      const res = await pool.query(
+        `INSERT INTO ordenes_venta (cliente_id, monto_total, condicion_pago, medio_pago, pago_inicial_realizado, monto_cuota_inicial, estado_despacho, estado_pago)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        [
+          orden.cliente_id,
+          orden.monto_total,
+          orden.condicion_pago || 'Contado',
+          orden.medio_pago || 'Efectivo',
+          orden.pago_inicial_realizado || false,
+          orden.monto_cuota_inicial || 0,
+          orden.estado_despacho || 'Listo para Enviar',
+          orden.estado_pago || 'Pendiente'
+        ]
+      );
+      const savedOrden = res.rows[0];
+      // Guardar detalle de la orden (sku + cantidad + precio)
+      if (orden.sku) {
+        await pool.query(
+          `INSERT INTO detalle_orden_venta (orden_id, sku, cantidad_paquetes, precio_unitario) VALUES ($1, $2, $3, $4)`,
+          [savedOrden.id, orden.sku, orden.cantidad_paquetes || 0, orden.precio_unitario || 0]
+        );
+      }
+      return savedOrden;
+    } catch (err) {
+      console.error('Error saving orden to DB:', err);
+      return orden;
+    }
+  },
+
+  // BUG-04 FIX: Persistir Cuotas de Pago en PostgreSQL
+  saveCuota: async (cuota) => {
+    if (!useDb || !pool) return cuota;
+    try {
+      const res = await pool.query(
+        `INSERT INTO cronograma_cuotas (orden_id, numero_cuota, monto, fecha_vencimiento, estado) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [cuota.orden_id, cuota.numero_cuota, cuota.monto, cuota.fecha_vencimiento, 'Pendiente']
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving cuota to DB:', err);
+      return cuota;
+    }
+  },
+
+  // BUG-09 FIX: Persistir SKU nuevo del catalogo en PostgreSQL
+  saveMaestroModelo: async (modelo) => {
+    if (!useDb || !pool) return modelo;
+    try {
+      const res = await pool.query(
+        `INSERT INTO maestro_modelos (sku, categoria, diseno, calidad, talla, peso, costo_hilo, mo_cost, precio_venta, activo)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
+         ON CONFLICT (sku) DO UPDATE SET
+           categoria = EXCLUDED.categoria, diseno = EXCLUDED.diseno, calidad = EXCLUDED.calidad,
+           talla = EXCLUDED.talla, peso = EXCLUDED.peso, costo_hilo = EXCLUDED.costo_hilo,
+           mo_cost = EXCLUDED.mo_cost, precio_venta = EXCLUDED.precio_venta
+         RETURNING *`,
+        [
+          modelo.sku, modelo.categoria || '', modelo.diseno || '', modelo.calidad || '',
+          modelo.talla || '', modelo.peso || 300, modelo.costo_hilo || 0.035,
+          modelo.mo_cost || 0.40, modelo.precio_venta || 0
+        ]
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving maestro_modelo to DB:', err);
+      return modelo;
+    }
+  },
+
+  // BUG-01 FIX: Persistir Distribucion de Hilo en PostgreSQL
+  saveDistribucion: async (dist) => {
+    if (!useDb || !pool) return dist;
+    try {
+      const res = await pool.query(
+        `INSERT INTO distribucion_hilo (operario_id, operario_nombre, hilo_id, color, material, fecha, turno, cajas_entregadas, estado, pares_producidos, rendimiento_comentario)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+        [
+          dist.operario_id, dist.operario_nombre, dist.hilo_id, dist.color, dist.material,
+          dist.fecha || new Date().toISOString().split('T')[0],
+          dist.turno || 'Mañana', dist.cajas_entregadas || 1,
+          dist.estado || 'En Uso', dist.pares_producidos || null, dist.rendimiento_comentario || ''
+        ]
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving distribucion to DB:', err);
+      return dist;
     }
   },
 
@@ -378,6 +488,67 @@ const db = {
         fallas.rows.forEach(r => d.bitacora_fallas.push({
           ...r,
           costo_reparacion: parseFloat(r.costo_reparacion) || 0
+        }));
+      }
+
+      // BUG-02 FIX: Cargar ordenes de venta desde DB al iniciar
+      const ordenes = await pool.query(`
+        SELECT ov.*, dov.sku, dov.cantidad_paquetes, dov.precio_unitario
+        FROM ordenes_venta ov
+        LEFT JOIN detalle_orden_venta dov ON dov.orden_id = ov.id
+        ORDER BY ov.id ASC
+      `);
+      if (ordenes.rows.length) {
+        d.ordenes_venta.length = 0;
+        ordenes.rows.forEach(r => d.ordenes_venta.push({
+          id: r.id,
+          cliente_id: r.cliente_id,
+          sku: r.sku || '',
+          cantidad_paquetes: r.cantidad_paquetes || 0,
+          precio_unitario: parseFloat(r.precio_unitario) || 0,
+          monto_total: parseFloat(r.monto_total) || 0,
+          condicion_pago: r.condicion_pago,
+          medio_pago: r.medio_pago,
+          fecha: r.fecha_venta ? r.fecha_venta.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          pago_inicial_realizado: r.pago_inicial_realizado,
+          monto_cuota_inicial: parseFloat(r.monto_cuota_inicial) || 0,
+          estado_despacho: r.estado_despacho,
+          estado_pago: r.estado_pago
+        }));
+      }
+
+      // BUG-04 FIX: Cargar cuotas desde DB al iniciar
+      const cuotas = await pool.query('SELECT * FROM cronograma_cuotas ORDER BY id ASC');
+      if (cuotas.rows.length) {
+        d.cronograma_cuotas.length = 0;
+        cuotas.rows.forEach(r => d.cronograma_cuotas.push({
+          id: r.id,
+          orden_id: r.orden_id,
+          numero_cuota: r.numero_cuota,
+          monto_cuota: parseFloat(r.monto) || 0,
+          fecha_vencimiento: r.fecha_vencimiento ? r.fecha_vencimiento.toISOString().split('T')[0] : '',
+          estado: r.estado,
+          fecha_pago: r.fecha_pago
+        }));
+      }
+
+      // BUG-01 FIX: Cargar distribuciones de hilo desde DB al iniciar
+      const dists = await pool.query('SELECT * FROM distribucion_hilo ORDER BY id ASC');
+      if (dists.rows.length) {
+        d.distribucion_hilo.length = 0;
+        dists.rows.forEach(r => d.distribucion_hilo.push({
+          id: r.id,
+          operario_id: r.operario_id,
+          operario_nombre: r.operario_nombre,
+          hilo_id: r.hilo_id,
+          color: r.color,
+          material: r.material,
+          fecha: r.fecha ? r.fecha.toISOString().split('T')[0] : '',
+          turno: r.turno,
+          cajas_entregadas: r.cajas_entregadas,
+          estado: r.estado,
+          pares_producidos: r.pares_producidos,
+          rendimiento_comentario: r.rendimiento_comentario || ''
         }));
       }
 

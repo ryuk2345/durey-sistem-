@@ -18,7 +18,7 @@ router.post('/auth/login', (req, res) => {
 // RESET COMPLETO A CERO
 router.post('/reset', async (req, res) => {
   d.operarios.length = 0;
-  d.maestro_modelos.length = 0;
+  // BUG-05 FIX: No borrar maestro_modelos — restaurar a defaults del data.js
   d.planilla_inventario.forEach(p => { p.ingresos = {}; p.ventas = {}; p.stock = p.inicial; });
   d.inventario_hilo.length = 0;
   d.bultos_master.length = 0;
@@ -366,13 +366,15 @@ router.post('/inventario/trasladar', (req, res) => {
 });
 
 // CATALOGO
-router.post('/catalogo/registrar', (req, res) => {
+router.post('/catalogo/registrar', async (req, res) => {
   const { sku, categoria, diseno, calidad, talla, peso_por_docena_g, costo_hilo_por_gramo, costo_mano_obra_acabado, precio_venta } = req.body;
   if (!sku) return res.status(400).json({ error: 'SKU requerido' });
   if (d.maestro_modelos.find(m => m.sku === sku)) return res.status(400).json({ error: `SKU "${sku}" ya existe` });
   const m = { id: d.genId(), sku, categoria, diseno, calidad, talla, peso_por_docena_g: peso_por_docena_g || 300, costo_hilo_por_gramo: costo_hilo_por_gramo || 0.03, costo_mano_obra_acabado: costo_mano_obra_acabado || 0.40, precio_venta: precio_venta || 0, activo: true };
   d.maestro_modelos.push(m);
-  res.json({ message: `SKU "${sku}" registrado`, modelo: m });
+  // BUG-09 FIX: Persistir SKU nuevo en PostgreSQL
+  await db.saveMaestroModelo({ sku, categoria, diseno, calidad, talla, peso: peso_por_docena_g || 300, costo_hilo: costo_hilo_por_gramo || 0.03, mo_cost: costo_mano_obra_acabado || 0.40, precio_venta: precio_venta || 0 });
+  res.json({ message: `SKU "${sku}" registrado y guardado`, modelo: m });
 });
 
 router.get('/catalogo', (req, res) => { res.json({ modelos: d.maestro_modelos }); });
@@ -423,8 +425,7 @@ router.post('/ventas/crear', async (req, res) => {
   const precio = parseFloat(precio_unitario) || 18.00;
   const montoTotal = cantPaq * precio;
   const esPorPartes = condicion === 'Por partes';
-  const orden = {
-    id: d.genId(),
+  const ordenObj = {
     cliente_id: cliente.id,
     sku,
     cantidad_paquetes: cantPaq,
@@ -438,6 +439,10 @@ router.post('/ventas/crear', async (req, res) => {
     estado_despacho: esPorPartes ? 'Bloqueado' : 'Listo para Enviar',
     estado_pago: esPorPartes ? 'Pendiente' : 'Pagado'
   };
+
+  // BUG-02 FIX: Persistir la orden de venta en PostgreSQL
+  const ordenGuardada = await db.saveOrden(ordenObj, d.cronograma_cuotas);
+  const orden = { id: d.genId(), ...ordenObj, ...ordenGuardada };
   d.ordenes_venta.push(orden);
 
   if (esPorPartes) {
@@ -445,7 +450,10 @@ router.post('/ventas/crear', async (req, res) => {
     const montoCuota = parseFloat((montoTotal / numCuotas).toFixed(2));
     for (let i = 1; i <= numCuotas; i++) {
       const fv = new Date(); fv.setMonth(fv.getMonth() + i);
-      d.cronograma_cuotas.push({ id: d.genId(), orden_id: orden.id, numero_cuota: i, monto_cuota: montoCuota, fecha_vencimiento: fv.toISOString().split('T')[0], estado: 'Pendiente', fecha_pago: null });
+      const cuota = { id: d.genId(), orden_id: orden.id, numero_cuota: i, monto_cuota: montoCuota, fecha_vencimiento: fv.toISOString().split('T')[0], estado: 'Pendiente', fecha_pago: null };
+      d.cronograma_cuotas.push(cuota);
+      // BUG-04 FIX: Persistir cuotas en DB
+      await db.saveCuota({ orden_id: orden.id, numero_cuota: i, monto: montoCuota, fecha_vencimiento: cuota.fecha_vencimiento });
     }
   }
 
@@ -521,19 +529,30 @@ router.get('/despacho/ordenes', (req, res) => {
   res.json({ ordenes });
 });
 
-router.post('/despacho/enviar', (req, res) => {
+router.post('/despacho/enviar', async (req, res) => {
   const { orden_id } = req.body;
   const orden = d.ordenes_venta.find(o => o.id === orden_id);
   if (!orden) return res.status(404).json({ error: 'Orden no encontrada' });
   if (orden.condicion_pago === 'Por partes' && !orden.pago_inicial_realizado) {
     return res.status(400).json({ error: 'Despacho Bloqueado - Pendiente de pago de cuota inicial' });
   }
-  const bultosDesp = d.bultos_master.filter(b => b.sku === orden.sku && b.estado === 'Almacenado');
+  // BUG-03 FIX: Aceptar bultos en cualquier estado activo (no solo 'Almacenado')
+  const bultosDesp = d.bultos_master.filter(b => b.sku === orden.sku && b.estado !== 'Despachado');
   let rest = orden.cantidad_paquetes;
   for (const b of bultosDesp) {
     if (rest <= 0) break;
-    if (b.cantidad_paquetes <= rest) { rest -= b.cantidad_paquetes; b.estado = 'Despachado'; const s = d.salones.find(s => s.id === b.salon_id); if (s) s.bultos_actuales = Math.max(0, s.bultos_actuales - 1); }
-    else { b.cantidad_paquetes -= rest; b.total_pares = b.cantidad_paquetes * 12; rest = 0; }
+    if (b.cantidad_paquetes <= rest) {
+      rest -= b.cantidad_paquetes;
+      b.estado = 'Despachado';
+      const s = d.salones.find(s => s.id === b.salon_id);
+      if (s) s.bultos_actuales = Math.max(0, s.bultos_actuales - 1);
+      await db.saveBulto(b);
+    } else {
+      b.cantidad_paquetes -= rest;
+      b.total_pares = b.cantidad_paquetes * 12;
+      rest = 0;
+      await db.saveBulto(b);
+    }
   }
   orden.estado_despacho = 'Despachada';
   io.emit('despacho_realizado', { orden });
@@ -588,7 +607,7 @@ router.post('/materia-prima/recepcion', (req, res) => {
   res.json({ message: estado === 'Recibida' ? 'Materia prima ingresada' : 'Lote rechazado y devuelto', recepcion: rec, stock_actual_cajas: hilo.stock_cajas, stock_actual_hilo: hilo.stock_kg });
 });
 
-router.post('/materia-prima/distribuir', (req, res) => {
+router.post('/materia-prima/distribuir', async (req, res) => {
   const { operario_id, hilo_id, turno, fecha, cajas_entregadas } = req.body;
   if (!operario_id || !hilo_id || !turno) return res.status(400).json({ error: 'Faltan campos obligatorios' });
 
@@ -605,9 +624,10 @@ router.post('/materia-prima/distribuir', (req, res) => {
 
   hilo.stock_cajas = (hilo.stock_cajas || 0) - cantCajas;
   hilo.stock_kg = Math.max(0, parseFloat((hilo.stock_kg - (cantCajas * 24.0)).toFixed(2)));
+  // BUG-01 FIX: Persistir el stock actualizado de hilo en PostgreSQL
+  await db.saveHilo(hilo);
 
-  const dist = {
-    id: d.genId(),
+  const distObj = {
     operario_id: operario.id,
     operario_nombre: operario.nombre,
     hilo_id: hilo.id,
@@ -621,6 +641,9 @@ router.post('/materia-prima/distribuir', (req, res) => {
     rendimiento_comentario: ''
   };
 
+  // Persistir distribución en DB
+  const savedDist = await db.saveDistribucion(distObj);
+  const dist = { id: savedDist.id || d.genId(), ...distObj };
   d.distribucion_hilo.push(dist);
   res.json({ message: `Se entregó ${cantCajas} caja(s) de hilo a ${operario.nombre}`, distribucion: dist });
 });
