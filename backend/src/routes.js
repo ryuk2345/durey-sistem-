@@ -287,8 +287,10 @@ router.post('/acabado/reprocesar', async (req, res) => {
 });
 
 router.post('/acabado/empaquetar', async (req, res) => {
-  const { sku, tipo_bolsa, cantidad_paquetes, lote_id } = req.body;
+  const { sku, tipo_bolsa, cantidad_paquetes, lote_id, salon_id } = req.body;
   if (!sku) return res.status(400).json({ error: 'SKU es requerido' });
+
+  const destSalon = salon_id || 'Salon A';
 
   if (lote_id) {
     const lote = d.lotes_produccion.find(l => l.id === lote_id);
@@ -299,9 +301,14 @@ router.post('/acabado/empaquetar', async (req, res) => {
   }
 
   const numPaq = parseInt(cantidad_paquetes) || 10;
-  const bultoObj = { tipo_bolsa: tipo_bolsa || 'Mediana', cantidad_paquetes: numPaq, total_pares: numPaq * 12, sku, salon_id: null, estado: 'Listo para Despacho' };
+  const bultoObj = { tipo_bolsa: tipo_bolsa || 'Mediana', cantidad_paquetes: numPaq, total_pares: numPaq * 12, sku, salon_id: destSalon, estado: 'Listo para Despacho' };
   const savedBulto = await db.saveBulto(bultoObj);
   d.bultos_master.push(savedBulto);
+
+  const targetSalon = d.salones.find(s => s.id === destSalon);
+  if (targetSalon) {
+    targetSalon.bultos_actuales = (targetSalon.bultos_actuales || 0) + 1;
+  }
   
   const cod = findPlanillaBySku(sku);
   const pi = d.planilla_inventario.find(p => p.codigo === cod);
@@ -312,7 +319,7 @@ router.post('/acabado/empaquetar', async (req, res) => {
   }
   
   io.emit('maquinas_actualizadas');
-  res.json({ message: 'Bulto consolidado y asentado en almacén', bulto: nuevo });
+  res.json({ message: `Bulto empaquetado exitosamente y almacenado en "${destSalon}"`, bulto: savedBulto });
 });
 
 // SALONES

@@ -60,7 +60,7 @@ function App() {
   const [hiloSubTab, setHiloSubTab] = useState('inventario');
   const [wizardStep, setWizardStep] = useState(1);
   const [selectedLotToPack, setSelectedLotToPack] = useState(null);
-  const [empaqueForm, setEmpaqueForm] = useState({ sku: '', tipo_bolsa: 'Mediana', cantidad_paquetes: 10 });
+  const [empaqueForm, setEmpaqueForm] = useState({ sku: '', tipo_bolsa: 'Mediana', cantidad_paquetes: 10, salon_id: 'Salon A' });
   const [showNuevoSalonModal, setShowNuevoSalonModal] = useState(false);
   const [clienteForm, setClienteForm] = useState({ numero_documento: '', nombre_cliente: '', telefono: '', direccion: '', cuotas_vencidas: 0 });
   const [busquedaCliente, setBusquedaCliente] = useState('');
@@ -1363,13 +1363,15 @@ function App() {
     fetchData();
   };
 
-  const handleEmpacarLote = async (lote, sku, tipoBolsa, cantidadPaquetes) => {
-    const numPaq = parseInt(cantidadPaquetes) || Math.ceil(lote.cantidad_pares_estimada / 12);
+  const handleEmpacarLote = async (lote, sku, tipoBolsa, cantidadPaquetes, salonId) => {
+    const numPaq = parseInt(cantidadPaquetes) || Math.ceil(((lote && lote.cantidad_pares_estimada) || 120) / 12);
+    const targetSalon = salonId || empaqueForm.salon_id || 'Salon A';
     const payload = {
       sku: sku || 'NIN-ENT-DEL-04',
       tipo_bolsa: tipoBolsa || 'Mediana',
       cantidad_paquetes: numPaq,
-      lote_id: lote.id
+      lote_id: lote ? lote.id : null,
+      salon_id: targetSalon
     };
     if (!connectionError) {
       try {
@@ -1379,15 +1381,16 @@ function App() {
         });
         const data = await res.json();
         if (!res.ok) { addNotification(data.error, 'error'); return; }
-        addNotification(data.message, 'success');
+        addNotification(data.message || `Bulto empaquetado y depositado en ${targetSalon}`, 'success');
       } catch { addNotification('Error de red', 'error'); }
     } else {
-      const nuevoBulto = { id: backendState.bultos.length + 1, ...payload, total_pares: numPaq * 12, salon_id: null, estado: 'Listo para Despacho' };
+      const nuevoBulto = { id: backendState.bultos.length + 1, ...payload, total_pares: numPaq * 12, salon_id: targetSalon, estado: 'Listo para Despacho' };
       setBackendState(prev => {
-        const newLotes = prev.lotes.map(l => l.id === lote.id ? { ...l, estado: 'Empacado' } : l);
-        return { ...prev, bultos: [...prev.bultos, nuevoBulto], lotes: newLotes };
+        const newLotes = prev.lotes.map(l => (lote && l.id === lote.id) ? { ...l, estado: 'Empacado' } : l);
+        const newSalones = prev.salones.map(s => s.id === targetSalon ? { ...s, bultos_actuales: (s.bultos_actuales || 0) + 1 } : s);
+        return { ...prev, bultos: [...prev.bultos, nuevoBulto], lotes: newLotes, salones: newSalones };
       });
-      addNotification(`Lote #${lote.id} empacado (simulado)`, 'success');
+      addNotification(`Bulto empacado y depositado en ${targetSalon} (simulado)`, 'success');
     }
     fetchData();
   };
@@ -3305,13 +3308,23 @@ function App() {
                               </div>
 
                               <div>
-                                <label className="text-[10px] font-bold text-secondary uppercase block mb-1">Destino Pre-definido</label>
-                                <input 
-                                  type="text" 
-                                  readOnly 
-                                  defaultValue="Cola de Entrada Almacén / Distribución"
-                                  className="w-full p-2 border border-outline-variant bg-surface-container-high rounded-lg text-xs text-on-surface-variant font-bold"
-                                />
+                                <label className="text-[10px] font-bold text-secondary uppercase block mb-1">Almacén / Salón de Destino (* Requerido)</label>
+                                <select 
+                                  value={empaqueForm.salon_id || 'Salon A'}
+                                  onChange={(e) => setEmpaqueForm({ ...empaqueForm, salon_id: e.target.value })}
+                                  className="w-full p-2 border border-primary/50 bg-primary/5 rounded-lg text-xs text-primary font-bold shadow-xs focus:ring-2 focus:ring-primary"
+                                >
+                                  {(backendState.salones.length > 0 ? backendState.salones : [
+                                    { id: "Salon A", capacidad_maxima_bultos: 50, bultos_actuales: 0 },
+                                    { id: "Salon B", capacidad_maxima_bultos: 50, bultos_actuales: 0 },
+                                    { id: "Salon C", capacidad_maxima_bultos: 40, bultos_actuales: 0 },
+                                    { id: "Almacen General", capacidad_maxima_bultos: 1000, bultos_actuales: 0 }
+                                  ]).map(s => (
+                                    <option key={s.id} value={s.id}>
+                                      📍 {s.id} ({s.bultos_actuales || 0} / {s.capacidad_maxima_bultos || 50} bultos)
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
 
                               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-[10px] text-emerald-800 font-sans space-y-0.5">
@@ -3319,6 +3332,7 @@ function App() {
                                 <p>• Código SKU: {empaqueForm.sku || 'No seleccionado'}</p>
                                 <p>• Cantidad: {empaqueForm.cantidad_paquetes} docenas ({empaqueForm.cantidad_paquetes * 12} pares)</p>
                                 <p>• Tipo: Bolsa {empaqueForm.tipo_bolsa}</p>
+                                <p className="font-bold text-primary">• Depósito en: {empaqueForm.salon_id || 'Salon A'}</p>
                               </div>
                             </div>
                           </div>
@@ -3349,15 +3363,15 @@ function App() {
                               setWizardStep(3);
                             } else {
                               // step 3: finalize empaque
-                              handleEmpacarLote(selectedLotToPack, empaqueForm.sku, empaqueForm.tipo_bolsa, empaqueForm.cantidad_paquetes);
+                              handleEmpacarLote(selectedLotToPack, empaqueForm.sku, empaqueForm.tipo_bolsa, empaqueForm.cantidad_paquetes, empaqueForm.salon_id || 'Salon A');
                               setSelectedLotToPack(null);
-                              setEmpaqueForm({ sku: '', tipo_bolsa: 'Mediana', cantidad_paquetes: 10 });
+                              setEmpaqueForm({ sku: '', tipo_bolsa: 'Mediana', cantidad_paquetes: 10, salon_id: 'Salon A' });
                               setWizardStep(1);
                             }
                           }}
                           className="px-4 py-1.5 bg-primary text-white rounded-lg font-bold hover:bg-primary-container transition text-[10px] flex items-center gap-1 shadow-sm"
                         >
-                          {wizardStep === 3 ? 'Finalizar Empaque' : 'Siguiente'}
+                          {wizardStep === 3 ? 'Finalizar Empaque y Depositar' : 'Siguiente'}
                         </button>
                       </div>
                     </div>
