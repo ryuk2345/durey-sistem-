@@ -61,8 +61,12 @@ async function runMigrations() {
   }
 }
 
+const d = require('./src/data');
+const db = require('./src/db');
+
 const PORT = process.env.PORT || 4000;
-runMigrations().then(() => {
+runMigrations().then(async () => {
+  await db.initDataFromDb(d);
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor de la Fabrica Durey escuchando en http://0.0.0.0:${PORT}`);
   });

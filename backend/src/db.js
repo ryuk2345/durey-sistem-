@@ -137,6 +137,254 @@ const db = {
         return newCl;
       }
     }
+  },
+  // Sync Operario
+  saveOperario: async (op) => {
+    if (!useDb || !pool) return op;
+    try {
+      if (op.id) {
+        const check = await pool.query('SELECT * FROM operarios WHERE id = $1', [op.id]);
+        if (check.rows.length > 0) {
+          const res = await pool.query(
+            `UPDATE operarios SET nombre = $1, tipo_contrato = $2, tarifa = $3, docenas_remalladas = $4, total_liquidado = $5 WHERE id = $6 RETURNING *`,
+            [op.nombre, op.tipo_contrato, op.tarifa, op.docenas_remalladas || 0, op.total_liquidado || 0, op.id]
+          );
+          return res.rows[0];
+        }
+      }
+      const res = await pool.query(
+        `INSERT INTO operarios (nombre, tipo_contrato, tarifa, docenas_remalladas, total_liquidado) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [op.nombre, op.tipo_contrato, op.tarifa, op.docenas_remalladas || 0, op.total_liquidado || 0]
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving operario to DB:', err);
+      return op;
+    }
+  },
+
+  // Sync Maquina
+  saveMaquina: async (maq) => {
+    if (!useDb || !pool) return maq;
+    try {
+      await pool.query(
+        `INSERT INTO maquinas (id, tipo, estado, encargado_id) VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id) DO UPDATE SET estado = EXCLUDED.estado, encargado_id = EXCLUDED.encargado_id`,
+        [maq.id, maq.tipo || 'tejido', maq.estado || 'Inactiva', maq.encargado_id || null]
+      );
+      return maq;
+    } catch (err) {
+      console.error('Error saving maquina to DB:', err);
+      return maq;
+    }
+  },
+
+  // Sync Lote
+  saveLote: async (lote) => {
+    if (!useDb || !pool) return lote;
+    try {
+      if (lote.id) {
+        const check = await pool.query('SELECT * FROM lotes_produccion WHERE id = $1', [lote.id]);
+        if (check.rows.length > 0) {
+          const res = await pool.query(
+            `UPDATE lotes_produccion 
+             SET maquina_id = $1, operario_id = $2, material = $3, color = $4, cantidad_pares_estimada = $5, cantidad_pares_primera = $6, cantidad_pares_segunda = $7, estado = $8
+             WHERE id = $9 RETURNING *`,
+            [lote.maquina_id, lote.operario_id, lote.material, lote.color, lote.cantidad_pares_estimada, lote.cantidad_pares_primera || 0, lote.cantidad_pares_segunda || 0, lote.estado, lote.id]
+          );
+          return res.rows[0];
+        }
+      }
+      const res = await pool.query(
+        `INSERT INTO lotes_produccion (maquina_id, operario_id, material, color, cantidad_pares_estimada, cantidad_pares_primera, cantidad_pares_segunda, estado)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        [lote.maquina_id, lote.operario_id, lote.material, lote.color, lote.cantidad_pares_estimada, lote.cantidad_pares_primera || 0, lote.cantidad_pares_segunda || 0, lote.estado || 'Tejiendo']
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving lote to DB:', err);
+      return lote;
+    }
+  },
+
+  // Sync Hilo
+  saveHilo: async (hilo) => {
+    if (!useDb || !pool) return hilo;
+    try {
+      if (hilo.id) {
+        const check = await pool.query('SELECT * FROM inventario_hilo WHERE id = $1', [hilo.id]);
+        if (check.rows.length > 0) {
+          const res = await pool.query(
+            `UPDATE inventario_hilo SET proveedor_id = $1, material = $2, color = $3, stock_cajas = $4, stock_kg = $5, costo_por_kg = $6 WHERE id = $7 RETURNING *`,
+            [hilo.proveedor_id || null, hilo.material, hilo.color, hilo.stock_cajas || 0, hilo.stock_kg || 0, hilo.costo_por_kg || 0, hilo.id]
+          );
+          return res.rows[0];
+        }
+      }
+      const res = await pool.query(
+        `INSERT INTO inventario_hilo (proveedor_id, material, color, stock_cajas, stock_kg, costo_por_kg) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [hilo.proveedor_id || null, hilo.material, hilo.color, hilo.stock_cajas || 0, hilo.stock_kg || 0, hilo.costo_por_kg || 0]
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving hilo to DB:', err);
+      return hilo;
+    }
+  },
+
+  // Sync Bulto Master
+  saveBulto: async (bulto) => {
+    if (!useDb || !pool) return bulto;
+    try {
+      if (bulto.id) {
+        const check = await pool.query('SELECT * FROM bultos_master WHERE id = $1', [bulto.id]);
+        if (check.rows.length > 0) {
+          const res = await pool.query(
+            `UPDATE bultos_master SET tipo_bolsa = $1, cantidad_paquetes = $2, total_pares = $3, sku = $4, salon_id = $5, estado = $6 WHERE id = $7 RETURNING *`,
+            [bulto.tipo_bolsa, bulto.cantidad_paquetes, bulto.total_pares, bulto.sku, bulto.salon_id || null, bulto.estado, bulto.id]
+          );
+          return res.rows[0];
+        }
+      }
+      const res = await pool.query(
+        `INSERT INTO bultos_master (tipo_bolsa, cantidad_paquetes, total_pares, sku, salon_id, estado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [bulto.tipo_bolsa, bulto.cantidad_paquetes, bulto.total_pares, bulto.sku, bulto.salon_id || null, bulto.estado || 'Listo para Despacho']
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving bulto to DB:', err);
+      return bulto;
+    }
+  },
+
+  // Sync Bitacora Falla
+  saveFalla: async (falla) => {
+    if (!useDb || !pool) return falla;
+    try {
+      const res = await pool.query(
+        `INSERT INTO bitacora_fallas (maquina_id, codigo_falla, descripcion, tipo, gravedad, estado, costo_reparacion)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [falla.maquina_id, falla.codigo_falla, falla.descripcion, falla.tipo || 'mecanica', falla.gravedad || 'Media', falla.estado || 'Reportada', falla.costo_reparacion || 0]
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving falla to DB:', err);
+      return falla;
+    }
+  },
+
+  // Init Data loader on startup
+  initDataFromDb: async (d) => {
+    if (!useDb || !pool) return;
+    try {
+      const ops = await pool.query('SELECT * FROM operarios ORDER BY id ASC');
+      if (ops.rows.length) {
+        d.operarios.length = 0;
+        ops.rows.forEach(r => d.operarios.push({
+          id: r.id,
+          nombre: r.nombre,
+          tipo_contrato: r.tipo_contrato,
+          tarifa: parseFloat(r.tarifa) || 0,
+          docenas_remalladas: parseInt(r.docenas_remalladas) || 0,
+          total_liquidado: parseFloat(r.total_liquidado) || 0
+        }));
+      }
+
+      const maqs = await pool.query('SELECT * FROM maquinas ORDER BY id ASC');
+      if (maqs.rows.length) {
+        maqs.rows.forEach(r => {
+          const m = d.maquinas.find(x => x.id === r.id);
+          if (m) {
+            m.estado = r.estado;
+            m.encargado_id = r.encargado_id;
+          }
+        });
+      }
+
+      const lotes = await pool.query('SELECT * FROM lotes_produccion ORDER BY id ASC');
+      if (lotes.rows.length) {
+        d.lotes_produccion.length = 0;
+        lotes.rows.forEach(r => d.lotes_produccion.push({
+          id: r.id,
+          maquina_id: r.maquina_id,
+          operario_id: r.operario_id,
+          material: r.material,
+          color: r.color,
+          cantidad_pares_estimada: r.cantidad_pares_estimada,
+          cantidad_pares_primera: r.cantidad_pares_primera,
+          cantidad_pares_segunda: r.cantidad_pares_segunda,
+          estado: r.estado,
+          fecha_creacion: r.fecha_creacion
+        }));
+      }
+
+      const cls = await pool.query('SELECT * FROM clientes ORDER BY id ASC');
+      if (cls.rows.length) {
+        d.clientes.length = 0;
+        cls.rows.forEach(r => d.clientes.push(r));
+      }
+
+      const hilos = await pool.query('SELECT * FROM inventario_hilo ORDER BY id ASC');
+      if (hilos.rows.length) {
+        d.inventario_hilo.length = 0;
+        hilos.rows.forEach(r => d.inventario_hilo.push({
+          id: r.id,
+          proveedor_id: r.proveedor_id,
+          material: r.material,
+          color: r.color,
+          stock_cajas: r.stock_cajas,
+          stock_kg: parseFloat(r.stock_kg),
+          costo_por_kg: parseFloat(r.costo_por_kg),
+          fecha_ingreso: r.fecha_ingreso
+        }));
+      }
+
+      const provs = await pool.query('SELECT * FROM proveedores_hilo ORDER BY id ASC');
+      if (provs.rows.length) {
+        d.proveedores_hilo.length = 0;
+        provs.rows.forEach(r => d.proveedores_hilo.push(r));
+      }
+
+      const bultos = await pool.query('SELECT * FROM bultos_master ORDER BY id ASC');
+      if (bultos.rows.length) {
+        d.bultos_master.length = 0;
+        bultos.rows.forEach(r => d.bultos_master.push(r));
+      }
+
+      const modelos = await pool.query('SELECT * FROM maestro_modelos ORDER BY id ASC');
+      if (modelos.rows.length) {
+        d.maestro_modelos.length = 0;
+        modelos.rows.forEach(r => d.maestro_modelos.push({
+          id: r.id,
+          sku: r.sku,
+          categoria: r.categoria,
+          diseno: r.diseno,
+          calidad: r.calidad,
+          talla: r.talla,
+          peso: r.peso,
+          peso_por_docena_g: r.peso,
+          costo_hilo_por_gramo: parseFloat(r.costo_hilo || 0.035),
+          costo_mano_obra_acabado: parseFloat(r.mo_cost || 0.40),
+          material_cost: parseFloat(r.material_cost || 10.0),
+          mo_cost: parseFloat(r.mo_cost || 0.40),
+          precio_venta: parseFloat(r.precio_venta || 25.0),
+          activo: r.activo
+        }));
+      }
+
+      const fallas = await pool.query('SELECT * FROM bitacora_fallas ORDER BY id ASC');
+      if (fallas.rows.length) {
+        d.bitacora_fallas.length = 0;
+        fallas.rows.forEach(r => d.bitacora_fallas.push({
+          ...r,
+          costo_reparacion: parseFloat(r.costo_reparacion) || 0
+        }));
+      }
+
+      console.log('✅ PostgreSQL -> Toda la información fue sincronizada y persistida desde PostgreSQL.');
+    } catch (err) {
+      console.error('Error inicializando data desde DB:', err);
+    }
   }
 };
 

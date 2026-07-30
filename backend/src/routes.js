@@ -72,36 +72,42 @@ router.post('/clientes', async (req, res) => {
   res.json({ message: 'Cliente guardado correctamente en la base de datos', cliente: saved });
 });
 
-router.post('/operarios', (req, res) => {
+router.post('/operarios', async (req, res) => {
   const { nombre, tipo_contrato, tarifa } = req.body;
   if (!nombre) return res.status(400).json({ error: 'Nombre es requerido' });
   const esJornal = tipo_contrato === 'jornal' || tipo_contrato === 'sueldo_fijo';
   const nuevoOp = {
-    id: d.genId(), nombre,
+    nombre,
     tipo_contrato: esJornal ? 'jornal' : 'destajo',
     es_sueldo_fijo: esJornal,
     modalidad: esJornal ? 'Sueldo Fijo (Jornal)' : 'A Destajo (Produccion)',
     tarifa: parseFloat(tarifa) || 0,
     docenas_remalladas: 0, total_liquidado: 0
   };
-  d.operarios.push(nuevoOp);
-  res.json({ message: `Operario ${nombre} registrado (${nuevoOp.modalidad})`, operario: nuevoOp });
+  const savedOp = await db.saveOperario(nuevoOp);
+  savedOp.es_sueldo_fijo = esJornal;
+  savedOp.modalidad = nuevoOp.modalidad;
+  d.operarios.push(savedOp);
+  res.json({ message: `Operario ${nombre} registrado (${savedOp.modalidad})`, operario: savedOp });
 });
 
-router.post('/maquinas/asignar', (req, res) => {
+router.post('/maquinas/asignar', async (req, res) => {
   const { maquinas_ids, encargado_id } = req.body;
   const operario = d.operarios.find(o => o.id === encargado_id);
   if (!operario) return res.status(404).json({ error: 'Operario no encontrado' });
-  maquinas_ids.forEach(id => {
+  for (const id of maquinas_ids) {
     const maq = d.maquinas.find(m => m.id === id);
-    if (maq) maq.encargado_id = encargado_id;
-  });
+    if (maq) {
+      maq.encargado_id = encargado_id;
+      await db.saveMaquina(maq);
+    }
+  }
   const resp = { message: 'Asignacion exitosa' };
   if (maquinas_ids.length < 5) resp.warning = 'Minimo recomendado: 5 maquinas por encargado.';
   res.json(resp);
 });
 
-router.post('/maquinas/crear', (req, res) => {
+router.post('/maquinas/crear', async (req, res) => {
   const { id, tipo, encargado_id } = req.body;
   if (!id || !tipo) return res.status(400).json({ error: 'Faltan campos obligatorios: id, tipo' });
 
@@ -116,12 +122,13 @@ router.post('/maquinas/crear', (req, res) => {
     encargado_id: encargado_id ? parseInt(encargado_id) : null
   };
 
+  await db.saveMaquina(nuevaMaq);
   d.maquinas.push(nuevaMaq);
   io.emit('maquinas_actualizadas', { maquinas: d.maquinas });
   res.json({ message: `Máquina ${limpiaId} registrada exitosamente (${tipo})`, maquina: nuevaMaq });
 });
 
-router.post('/maquinas/iniciar', (req, res) => {
+router.post('/maquinas/iniciar', async (req, res) => {
   const { maquina_id, maquina_ids, hilo_id, color, material, cantidad_estimada } = req.body;
   const ids = maquina_ids || (maquina_id ? [maquina_id] : []);
   if (!ids || ids.length === 0) return res.status(400).json({ error: 'No se especifico ninguna maquina' });
@@ -153,68 +160,69 @@ router.post('/maquinas/iniciar', (req, res) => {
     hilosValidados.push({ hilo, cajasPM, totalCajasReq });
   }
 
-  hilosValidados.forEach(({ hilo, totalCajasReq }) => {
+  for (const { hilo, totalCajasReq } of hilosValidados) {
     hilo.stock_cajas = (hilo.stock_cajas || 0) - totalCajasReq;
     hilo.stock_kg = Math.max(0, parseFloat((hilo.stock_kg - (totalCajasReq * 24.0)).toFixed(2)));
-  });
+    await db.saveHilo(hilo);
+  }
 
   const primerHilo = hilosValidados[0].hilo;
-  const primerCajas = hilosValidados[0].cajasPM;
+  const primerCajas = hilosValidados[0].hilo.cajas_por_maquina || hilosValidados[0].cajasPM;
 
   const nuevosLotes = [];
-  ids.forEach(id => {
+  for (const id of ids) {
     const maq = d.maquinas.find(m => m.id === id);
     if (maq) {
       maq.estado = 'Tejiendo';
-      const lote = { 
-        id: d.genId(), 
+      await db.saveMaquina(maq);
+      const loteObj = { 
         maquina_id: id, 
         hilo_id: primerHilo.id, 
         color: primerHilo.color, 
         material: primerHilo.material, 
         cajas_asignadas: primerCajas, 
-        hilos_asignados: hilosValidados.map(hv => ({
-          hilo_id: hv.hilo.id,
-          color: hv.hilo.color,
-          material: hv.hilo.material,
-          cajas_por_maquina: hv.cajasPM
-        })),
         cantidad_pares_estimada: cantidad_estimada || 240, 
         cantidad_pares_primera: 0, 
         cantidad_pares_segunda: 0, 
         estado: 'Tejiendo' 
       };
-      d.lotes_produccion.push(lote);
-      nuevosLotes.push(lote);
+      const savedLote = await db.saveLote(loteObj);
+      d.lotes_produccion.push(savedLote);
+      nuevosLotes.push(savedLote);
     }
-  });
+  }
   io.emit('maquinas_actualizadas', { maquinas: d.maquinas });
   res.json({ message: `Tejido iniciado en ${nuevosLotes.length} maquina(s)`, lotes: nuevosLotes });
 });
 
-router.post('/maquinas/clasificar', (req, res) => {
+router.post('/maquinas/clasificar', async (req, res) => {
   const { lote_id, primera, segunda } = req.body;
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
   lote.cantidad_pares_primera = parseInt(primera) || 0;
   lote.cantidad_pares_segunda = parseInt(segunda) || 0;
   lote.estado = 'Listo para Volteado';
+  await db.saveLote(lote);
   const maq = d.maquinas.find(m => m.id === lote.maquina_id);
-  if (maq) maq.estado = 'Inactiva';
+  if (maq) {
+    maq.estado = 'Inactiva';
+    await db.saveMaquina(maq);
+  }
   io.emit('maquinas_actualizadas', { maquinas: d.maquinas });
   res.json({ message: 'Lote clasificado', lote });
 });
 
 // REMALLADO Y VOLTEADO
-router.post('/remallado/voltear', (req, res) => {
+router.post('/remallado/voltear', async (req, res) => {
   const { lote_id } = req.body;
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
   lote.estado = 'Listo para Remallado';
+  await db.saveLote(lote);
   res.json({ message: 'Lote volteado y enviado a Costura (Remallado)', lote });
 });
 
-router.post('/remallado/procesar', (req, res) => {
+router.post('/remallado/procesar', async (req, res) => {
   const { lote_id, operario_id, maquina_id, cantidad } = req.body;
   const operario = d.operarios.find(o => o.id === operario_id);
   if (!operario) return res.status(404).json({ error: 'Operario no encontrado' });
@@ -222,17 +230,22 @@ router.post('/remallado/procesar', (req, res) => {
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
   
   lote.estado = 'Listo para Planchado';
+  await db.saveLote(lote);
+
   const cant = parseInt(cantidad) || 0;
   const pago = (cant * operario.tarifa).toFixed(2);
   operario.docenas_remalladas = (operario.docenas_remalladas || 0) + cant;
   operario.total_liquidado = (operario.total_liquidado || 0) + parseFloat(pago);
+  await db.saveOperario(operario);
 
   if (maquina_id) {
     const maq = d.maquinas.find(m => m.id === maquina_id);
     if (maq) {
       maq.estado = 'Activa';
-      setTimeout(() => {
+      await db.saveMaquina(maq);
+      setTimeout(async () => {
         maq.estado = 'Inactiva';
+        await db.saveMaquina(maq);
         io.emit('maquinas_actualizadas', { maquinas: d.maquinas });
       }, 8000);
     }
@@ -243,35 +256,37 @@ router.post('/remallado/procesar', (req, res) => {
 });
 
 // ACABADO
-router.post('/acabado/planchar', (req, res) => {
+router.post('/acabado/planchar', async (req, res) => {
   const { lote_id } = req.body;
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
   lote.estado = 'Remallado';
+  await db.saveLote(lote);
   io.emit('maquinas_actualizadas');
   res.json({ message: 'Lote planchado y enviado a Control de Calidad', lote });
 });
 
-router.post('/acabado/inspeccionar', (req, res) => {
+router.post('/acabado/inspeccionar', async (req, res) => {
   const { lote_id } = req.body;
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
-  if (lote.estado !== 'Remallado') return res.status(400).json({ error: `Estado "${lote.estado}", se esperaba "Remallado"` });
   lote.estado = 'Aprobado para Preparado';
+  await db.saveLote(lote);
   io.emit('maquinas_actualizadas');
   res.json({ message: 'Lote aprobado en Control de Calidad y enviado a Preparado', lote });
 });
 
-router.post('/acabado/reprocesar', (req, res) => {
+router.post('/acabado/reprocesar', async (req, res) => {
   const { lote_id } = req.body;
   const lote = d.lotes_produccion.find(l => l.id === lote_id);
   if (!lote) return res.status(404).json({ error: 'Lote no encontrado' });
   lote.estado = 'Aprobado para Preparado';
+  await db.saveLote(lote);
   io.emit('maquinas_actualizadas');
   res.json({ message: 'Lote reprocesado. Se mantiene como Segunda.', lote });
 });
 
-router.post('/acabado/empaquetar', (req, res) => {
+router.post('/acabado/empaquetar', async (req, res) => {
   const { sku, tipo_bolsa, cantidad_paquetes, lote_id } = req.body;
   if (!sku) return res.status(400).json({ error: 'SKU es requerido' });
 
@@ -279,12 +294,14 @@ router.post('/acabado/empaquetar', (req, res) => {
     const lote = d.lotes_produccion.find(l => l.id === lote_id);
     if (lote) {
       lote.estado = 'Empacado';
+      await db.saveLote(lote);
     }
   }
 
   const numPaq = parseInt(cantidad_paquetes) || 10;
-  const nuevo = { id: d.genId(), tipo_bolsa: tipo_bolsa || 'Mediana', cantidad_paquetes: numPaq, total_pares: numPaq * 12, sku, salon_id: null, estado: 'Listo para Despacho' };
-  d.bultos_master.push(nuevo);
+  const bultoObj = { tipo_bolsa: tipo_bolsa || 'Mediana', cantidad_paquetes: numPaq, total_pares: numPaq * 12, sku, salon_id: null, estado: 'Listo para Despacho' };
+  const savedBulto = await db.saveBulto(bultoObj);
+  d.bultos_master.push(savedBulto);
   
   const cod = findPlanillaBySku(sku);
   const pi = d.planilla_inventario.find(p => p.codigo === cod);
