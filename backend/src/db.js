@@ -53,17 +53,17 @@ const db = {
   resetAll: async () => {
     if (!useDb || !pool) return;
     try {
-      await pool.query(`
-        TRUNCATE TABLE 
-          lotes_produccion, distribucion_hilo, bultos_master, detalle_orden_venta,
-          cronograma_cuotas, ordenes_venta, clientes, ordenes_compra,
-          recepcion_materia_prima, bitacora_fallas, historico_traslados,
-          proveedores_hilo, inventario_hilo, operarios RESTART IDENTITY CASCADE;
-        UPDATE maquinas SET estado = 'Inactiva', encargado_id = NULL;
-        UPDATE salones SET bultos_actuales = 0;
-        UPDATE planilla_inventario SET inicial = 0, stock = 0, ingresos = '{}', ventas = '{}';
-      `);
-      console.log('PostgreSQL Database reset successfully to zero.');
+      // pg library no soporta múltiples statements en una sola llamada — se ejecutan por separado
+      await pool.query(
+        `TRUNCATE TABLE lotes_produccion, distribucion_hilo, bultos_master, detalle_orden_venta,
+         cronograma_cuotas, ordenes_venta, clientes, ordenes_compra,
+         recepcion_materia_prima, bitacora_fallas, historico_traslados,
+         proveedores_hilo, inventario_hilo, operarios RESTART IDENTITY CASCADE`
+      );
+      await pool.query(`UPDATE maquinas SET estado = 'Inactiva', encargado_id = NULL`);
+      await pool.query(`UPDATE salones SET bultos_actuales = 0`);
+      await pool.query(`UPDATE planilla_inventario SET inicial = 0, stock = 0, ingresos = '{}', ventas = '{}'`);
+      console.log('PostgreSQL Database reset completamente a cero.');
     } catch (err) {
       console.error('Error resetting PostgreSQL DB:', err);
     }
