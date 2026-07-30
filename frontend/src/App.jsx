@@ -3581,9 +3581,9 @@ function App() {
                           {backendState.modelos && backendState.modelos.map((m, idx) => (
                             <tr key={idx} className="border-b border-outline-variant hover:bg-surface/50">
                               <td className="px-4 py-2 font-bold text-primary font-mono">{m.sku}</td>
-                              <td className="px-4 py-2 text-center font-bold text-secondary">{m.peso} g</td>
-                              <td className="px-4 py-2 text-right">S/ {m.material_cost.toFixed(2)}</td>
-                              <td className="px-4 py-2 text-right font-bold text-emerald-700 bg-emerald-50/30">S/ {(m.material_cost + m.mo_cost).toFixed(2)}</td>
+                              <td className="px-4 py-2 text-center font-bold text-secondary">{m.peso || m.peso_por_docena_g || 300} g</td>
+                              <td className="px-4 py-2 text-right">S/ {Number(m.material_cost || (m.peso_por_docena_g || 300) * (m.costo_hilo_por_gramo || 0.035) || 0).toFixed(2)}</td>
+                              <td className="px-4 py-2 text-right font-bold text-emerald-700 bg-emerald-50/30">S/ {Number((m.material_cost || (m.peso_por_docena_g || 300) * (m.costo_hilo_por_gramo || 0.035) || 0) + (m.mo_cost || m.costo_mano_obra_acabado || 0.40)).toFixed(2)}</td>
                             </tr>
                           ))}
                         </tbody>
