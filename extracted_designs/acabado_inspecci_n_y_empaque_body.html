@@ -1,319 +1,356 @@
-
 <!-- Header Info -->
 <div class="mb-lg flex justify-between items-end">
-<div>
-<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Operations Dashboard</h3>
-<p class="text-on-surface-variant">Real-time monitoring of ironing, quality control, and packaging lines.</p>
-</div>
-<div class="flex gap-3">
-<div class="bg-surface border border-outline-variant rounded-xl p-4 flex flex-col items-end">
-<span class="text-label-md text-outline uppercase">Daily Target</span>
-<span class="font-headline-sm text-primary font-bold">4,200 / 5,000 Pairs</span>
-</div>
-<div class="bg-surface border border-outline-variant rounded-xl p-4 flex flex-col items-end">
-<span class="text-label-md text-outline uppercase">Rejection Rate</span>
-<span class="font-headline-sm text-tertiary font-bold">1.2%</span>
-</div>
-</div>
+    <div>
+        <h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Operations Dashboard</h3>
+        <p class="text-on-surface-variant">Real-time monitoring of ironing, quality control, and packaging lines.</p>
+    </div>
+    <div class="flex gap-3">
+        <div class="bg-surface border border-outline-variant rounded-xl p-4 flex flex-col items-end">
+            <span class="text-label-md text-outline uppercase">Daily Target</span>
+            <span class="font-headline-sm text-primary font-bold">4,200 / 5,000 Pairs</span>
+        </div>
+        <div class="bg-surface border border-outline-variant rounded-xl p-4 flex flex-col items-end">
+            <span class="text-label-md text-outline uppercase">Rejection Rate</span>
+            <span class="font-headline-sm text-tertiary font-bold">1.2%</span>
+        </div>
+    </div>
 </div>
 <div class="bento-grid">
-<!-- SECTION: Ironing Area (Lotes en proceso) -->
-<section class="col-span-8 bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
-<div class="px-lg py-md bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">iron</span>
-<h4 class="font-bold text-on-surface">Ironing & Steaming: Batches In Progress</h4>
-</div>
-<span class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">Live Flow</span>
-</div>
-<div class="p-lg">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-surface-container-high/50 text-label-md text-outline uppercase">
-<th class="p-3 font-semibold rounded-tl-lg">Lot ID</th>
-<th class="p-3 font-semibold">SKU / Product</th>
-<th class="p-3 font-semibold">Quantity</th>
-<th class="p-3 font-semibold">Progress</th>
-<th class="p-3 font-semibold">Machine</th>
-<th class="p-3 font-semibold rounded-tr-lg text-right">Actions</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-outline-variant">
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="p-3 font-data-mono text-primary">#LOT-2490</td>
-<td class="p-3">
-<span class="font-bold">Athletic Crew V2</span><br/>
-<span class="text-xs text-on-surface-variant">Color: Charcoal / Size: L</span>
-</td>
-<td class="p-3 font-medium">1,200 prs</td>
-<td class="p-3">
-<div class="flex items-center gap-2">
-<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 75%;"></div>
-</div>
-<span class="text-xs font-bold text-primary">75%</span>
-</div>
-</td>
-<td class="p-3">
-<span class="flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                        ST-04
-                                    </span>
-</td>
-<td class="p-3 text-right">
-<button class="text-primary hover:bg-primary-container/10 p-2 rounded-full transition-colors">
-<span class="material-symbols-outlined">visibility</span>
-</button>
-</td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="p-3 font-data-mono text-primary">#LOT-2495</td>
-<td class="p-3">
-<span class="font-bold">Dress Silky Smooth</span><br/>
-<span class="text-xs text-on-surface-variant">Color: Navy / Size: M</span>
-</td>
-<td class="p-3 font-medium">850 prs</td>
-<td class="p-3">
-<div class="flex items-center gap-2">
-<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 32%;"></div>
-</div>
-<span class="text-xs font-bold text-primary">32%</span>
-</div>
-</td>
-<td class="p-3">
-<span class="flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                        ST-01
-                                    </span>
-</td>
-<td class="p-3 text-right">
-<button class="text-primary hover:bg-primary-container/10 p-2 rounded-full transition-colors">
-<span class="material-symbols-outlined">visibility</span>
-</button>
-</td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="p-3 font-data-mono text-primary">#LOT-2501</td>
-<td class="p-3">
-<span class="font-bold">Compression Elite</span><br/>
-<span class="text-xs text-on-surface-variant">Color: Black / Size: XL</span>
-</td>
-<td class="p-3 font-medium">500 prs</td>
-<td class="p-3">
-<div class="flex items-center gap-2">
-<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-warning-500 rounded-full" style="width: 10%;"></div>
-</div>
-<span class="text-xs font-bold text-outline">Warmup</span>
-</div>
-</td>
-<td class="p-3">
-<span class="flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                        ST-02
-                                    </span>
-</td>
-<td class="p-3 text-right">
-<button class="text-primary hover:bg-primary-container/10 p-2 rounded-full transition-colors">
-<span class="material-symbols-outlined">visibility</span>
-</button>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<!-- SECTION: Quality Control (Tarjetas de inspección) -->
-<section class="col-span-4 bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
-<div class="px-lg py-md bg-tertiary-container text-white flex justify-between items-center">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined">verified</span>
-<h4 class="font-bold">Quality Inspection Queue</h4>
-</div>
-<span class="text-[10px] font-bold px-2 py-0.5 bg-white/20 rounded uppercase tracking-tighter">Station B-12</span>
-</div>
-<div class="p-md space-y-4 max-h-[450px] overflow-y-auto">
-<!-- Inspection Card 1 -->
-<div class="border border-outline-variant rounded-xl p-4 bg-white hover:shadow-md transition-all">
-<div class="flex justify-between items-start mb-3">
-<div>
-<span class="text-xs font-bold text-outline uppercase tracking-tight">Active Sample</span>
-<p class="font-bold text-lg">Batch #LOT-2488</p>
-</div>
-<div class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-md border border-amber-200">
-                                PERSISTENT: SEGUNDA
+    <!-- SECTION: Ironing Area (Lotes en proceso) -->
+    <section class="col-span-8 bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+        <div
+            class="px-lg py-md bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">iron</span>
+                <h4 class="font-bold text-on-surface">Ironing & Steaming: Batches In Progress</h4>
+            </div>
+            <span
+                class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">Live
+                Flow</span>
+        </div>
+        <div class="p-lg">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-surface-container-high/50 text-label-md text-outline uppercase">
+                        <th class="p-3 font-semibold rounded-tl-lg">Lot ID</th>
+                        <th class="p-3 font-semibold">SKU / Product</th>
+                        <th class="p-3 font-semibold">Quantity</th>
+                        <th class="p-3 font-semibold">Progress</th>
+                        <th class="p-3 font-semibold">Machine</th>
+                        <th class="p-3 font-semibold rounded-tr-lg text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant">
+                    <tr class="hover:bg-surface-container-low transition-colors group">
+                        <td class="p-3 font-data-mono text-primary">#LOT-2490</td>
+                        <td class="p-3">
+                            <span class="font-bold">Athletic Crew V2</span><br />
+                            <span class="text-xs text-on-surface-variant">Color: Charcoal / Size: L</span>
+                        </td>
+                        <td class="p-3 font-medium">1,200 prs</td>
+                        <td class="p-3">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary rounded-full" style="width: 75%;"></div>
+                                </div>
+                                <span class="text-xs font-bold text-primary">75%</span>
                             </div>
-</div>
-<div class="grid grid-cols-2 gap-2 mb-4">
-<div class="p-2 bg-surface-container-low rounded-lg border border-outline-variant/30">
-<p class="text-[10px] text-outline uppercase">Defect Rate</p>
-<p class="font-bold text-error">4.5%</p>
-</div>
-<div class="p-2 bg-surface-container-low rounded-lg border border-outline-variant/30">
-<p class="text-[10px] text-outline uppercase">Issue</p>
-<p class="font-bold text-on-surface">Linking Gap</p>
-</div>
-</div>
-<div class="flex gap-2">
-<button class="flex-1 bg-tertiary text-white py-2 rounded-lg font-bold text-sm hover:bg-tertiary/90 active:scale-[0.98] transition-all" onclick="this.closest('.border').remove()">
-                                Send to Reprocess
+                        </td>
+                        <td class="p-3">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                ST-04
+                            </span>
+                        </td>
+                        <td class="p-3 text-right">
+                            <button
+                                class="text-primary hover:bg-primary-container/10 p-2 rounded-full transition-colors">
+                                <span class="material-symbols-outlined">visibility</span>
                             </button>
-<button class="px-3 border border-outline text-on-surface py-2 rounded-lg font-bold text-sm hover:bg-surface-container-high">
-<span class="material-symbols-outlined align-middle text-lg">flag</span>
-</button>
-</div>
-</div>
-<!-- Inspection Card 2 -->
-<div class="border border-outline-variant rounded-xl p-4 bg-white opacity-80">
-<div class="flex justify-between items-start mb-3">
-<div>
-<span class="text-xs font-bold text-outline uppercase tracking-tight">Next in Line</span>
-<p class="font-bold text-lg">Batch #LOT-2489</p>
-</div>
-</div>
-<p class="text-sm text-on-surface-variant mb-4 italic">Pending initial measurement checks...</p>
-<button class="w-full border-2 border-dashed border-outline-variant py-2 rounded-lg text-outline font-bold text-sm">
-                            Start Inspection
-                        </button>
-</div>
-</div>
-</section>
-<!-- SECTION: Packaging Wizard (3 Pasos) -->
-<section class="col-span-12 bg-surface border border-outline-variant rounded-2xl shadow-sm">
-<div class="flex border-b border-outline-variant">
-<div class="p-lg border-r border-outline-variant w-1/4 bg-surface-container-low/30">
-<h4 class="font-bold text-primary mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined">inventory</span> Packaging Wizard
-                        </h4>
-<div class="space-y-6 relative">
-<!-- Vertical Stepper Visual -->
-<div class="absolute left-[15px] top-2 w-0.5 h-[calc(100%-20px)] bg-outline-variant"></div>
-<div class="flex gap-4 relative z-10 step-active" id="step-nav-1">
-<span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm ring-4 ring-primary/20">1</span>
-<div>
-<p class="font-bold text-sm leading-tight">Individual Pairing</p>
-<p class="text-[11px] text-outline">Labels & Tagging</p>
-</div>
-</div>
-<div class="flex gap-4 relative z-10 text-outline" id="step-nav-2">
-<span class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-sm border border-outline-variant">2</span>
-<div>
-<p class="font-bold text-sm leading-tight">Dozen Bundling</p>
-<p class="text-[11px] text-outline">12 Pairs grouping</p>
-</div>
-</div>
-<div class="flex gap-4 relative z-10 text-outline" id="step-nav-3">
-<span class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-sm border border-outline-variant">3</span>
-<div>
-<p class="font-bold text-sm leading-tight">Master Bag</p>
-<p class="text-[11px] text-outline">Final Bulk Container</p>
-</div>
-</div>
-</div>
-</div>
-<div class="p-lg flex-1">
-<!-- Step 1: Individual -->
-<div class="wizard-step" id="step-content-1">
-<div class="mb-6">
-<h5 class="text-xl font-bold text-on-surface">Step 1: Individual Pairing & Tagging</h5>
-<p class="text-on-surface-variant">Confirm individual pair labeling and quality stamp placement.</p>
-</div>
-<div class="grid grid-cols-2 gap-6">
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center">
-<div class="w-24 h-24 mb-4 rounded-lg overflow-hidden bg-surface-container-high relative">
-<div class="w-full h-full bg-cover bg-center" data-alt="A professional close-up of a high-quality cotton athletic sock being tagged with a white barcode label in a bright industrial setting. The lighting is clean and clinical, highlighting the texture of the fabric. The overall style is modern factory management with a focus on precision and quality control." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgaxc-GL2xhKUXdqHg51avD1fJZH3EeMdfBugDBHqkLp3upDGWmkI4XpxEM4RN7zWsaVDxDzXEgF-_QhA5jQkdDmK8ol1oz0C1GX8MDT3lFIbZrkvuA-j68-21PonYqVI2v5O1lJcI_WtZPi6vyK_Py3fcaVtvbC96wnf7D1jSblUIloks4L2SKxji0zDVDK1pY5V3KoG-i2TmqoxFLZl4XtKbfr1SUGqMXwQXZpP3HRfQGX1ALNE6NNhPh0Avcga0rkZW3B5TBB4')"></div>
-</div>
-<p class="font-bold">Model #SKU-990-A</p>
-<p class="text-sm text-outline">Confirm tag type: HANGER_GOLD</p>
-</div>
-<div class="space-y-4">
-<div class="p-4 bg-primary/5 border border-primary/20 rounded-xl">
-<label class="flex items-center gap-3 cursor-pointer">
-<input checked="" class="w-5 h-5 rounded border-primary text-primary focus:ring-primary" type="checkbox"/>
-<span class="font-medium">Barcode label applied correctly</span>
-</label>
-</div>
-<div class="p-4 bg-primary/5 border border-primary/20 rounded-xl">
-<label class="flex items-center gap-3 cursor-pointer">
-<input checked="" class="w-5 h-5 rounded border-primary text-primary focus:ring-primary" type="checkbox"/>
-<span class="font-medium">Quality seal 'Approved' visible</span>
-</label>
-</div>
-<div class="p-4 bg-surface-container-low border border-outline-variant rounded-xl border-dashed">
-<p class="text-xs font-bold text-tertiary mb-1 uppercase">Persistent Alert</p>
-<p class="text-sm">Batch includes <strong class="text-tertiary">Segunda</strong> grade items. Ensure specific yellow tag is used for 15% of the lot.</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Step 2: Dozens (Hidden by default) -->
-<div class="wizard-step hidden" id="step-content-2">
-<div class="mb-6">
-<h5 class="text-xl font-bold text-on-surface">Step 2: Dozens Grouping (12 Pairs)</h5>
-<p class="text-on-surface-variant">Assemble 12 pairs into internal packaging bands.</p>
-</div>
-<div class="grid grid-cols-3 gap-4">
-<div class="border-2 border-primary bg-primary-container/10 p-6 rounded-xl text-center">
-<span class="material-symbols-outlined text-4xl mb-2 text-primary">view_comfy_alt</span>
-<p class="font-bold text-primary">12 Pairs Bundle</p>
-<p class="text-xs">Standard Configuration</p>
-</div>
-<div class="border border-outline-variant p-6 rounded-xl text-center hover:bg-surface-container-low cursor-pointer transition-colors">
-<span class="material-symbols-outlined text-4xl mb-2 text-outline">grid_view</span>
-<p class="font-bold">6 Pairs Mini-Bundle</p>
-<p class="text-xs">Special Request</p>
-</div>
-<div class="border border-outline-variant p-6 rounded-xl text-center hover:bg-surface-container-low cursor-pointer transition-colors">
-<span class="material-symbols-outlined text-4xl mb-2 text-outline">style</span>
-<p class="font-bold">Custom Pack</p>
-<p class="text-xs">Variable Count</p>
-</div>
-</div>
-<div class="mt-8 p-4 bg-surface-container-low rounded-xl">
-<div class="flex justify-between items-center">
-<span class="font-medium">Automatic Counter:</span>
-<span class="font-data-mono text-xl font-bold">144 / 1,200 <span class="text-xs text-outline font-normal">pairs processed</span></span>
-</div>
-</div>
-</div>
-<!-- Step 3: Master Bag (Hidden by default) -->
-<div class="wizard-step hidden" id="step-content-3">
-<div class="mb-6">
-<h5 class="text-xl font-bold text-on-surface">Step 3: Master Bag Selection</h5>
-<p class="text-on-surface-variant">Select capacity and generate shipping manifest.</p>
-</div>
-<div class="grid grid-cols-2 gap-8">
-<div class="space-y-4">
-<label class="block">
-<span class="text-sm font-bold text-on-surface block mb-2">Selector Capacity (Dozens)</span>
-<select class="w-full rounded-lg border-outline-variant bg-white focus:ring-primary focus:border-primary">
-<option>20 Dozens (240 Pairs) - Small</option>
-<option selected="">50 Dozens (600 Pairs) - Medium</option>
-<option>100 Dozens (1200 Pairs) - Master Large</option>
-</select>
-</label>
-<label class="block">
-<span class="text-sm font-bold text-on-surface block mb-2">Destination Facility</span>
-<input class="w-full rounded-lg border-outline-variant bg-white focus:ring-primary focus:border-primary" type="text" value="Main Logistics Center - North Dock"/>
-</label>
-</div>
-<div class="bg-surface-container-low p-6 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center">
-<span class="material-symbols-outlined text-5xl text-outline mb-4">qr_code_2</span>
-<p class="text-sm font-medium text-on-surface">Label Preview Ready</p>
-<button class="mt-4 text-primary font-bold text-sm underline">Download Manifest PDF</button>
-</div>
-</div>
-</div>
-<div class="mt-10 pt-6 border-t border-outline-variant flex justify-between items-center">
-<button class="px-6 py-2.5 rounded-lg font-bold border border-outline hover:bg-surface-container-high transition-all opacity-50 cursor-not-allowed" id="btn-prev">
-                                Previous
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-surface-container-low transition-colors group">
+                        <td class="p-3 font-data-mono text-primary">#LOT-2495</td>
+                        <td class="p-3">
+                            <span class="font-bold">Dress Silky Smooth</span><br />
+                            <span class="text-xs text-on-surface-variant">Color: Navy / Size: M</span>
+                        </td>
+                        <td class="p-3 font-medium">850 prs</td>
+                        <td class="p-3">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary rounded-full" style="width: 32%;"></div>
+                                </div>
+                                <span class="text-xs font-bold text-primary">32%</span>
+                            </div>
+                        </td>
+                        <td class="p-3">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                ST-01
+                            </span>
+                        </td>
+                        <td class="p-3 text-right">
+                            <button
+                                class="text-primary hover:bg-primary-container/10 p-2 rounded-full transition-colors">
+                                <span class="material-symbols-outlined">visibility</span>
                             </button>
-<button class="px-8 py-2.5 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20" id="btn-next">
-                                Continue
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-surface-container-low transition-colors group">
+                        <td class="p-3 font-data-mono text-primary">#LOT-2501</td>
+                        <td class="p-3">
+                            <span class="font-bold">Compression Elite</span><br />
+                            <span class="text-xs text-on-surface-variant">Color: Black / Size: XL</span>
+                        </td>
+                        <td class="p-3 font-medium">500 prs</td>
+                        <td class="p-3">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                                    <div class="h-full bg-warning-500 rounded-full" style="width: 10%;"></div>
+                                </div>
+                                <span class="text-xs font-bold text-outline">Warmup</span>
+                            </div>
+                        </td>
+                        <td class="p-3">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                ST-02
+                            </span>
+                        </td>
+                        <td class="p-3 text-right">
+                            <button
+                                class="text-primary hover:bg-primary-container/10 p-2 rounded-full transition-colors">
+                                <span class="material-symbols-outlined">visibility</span>
                             </button>
-</div>
-</div>
-</div>
-</section>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <!-- SECTION: Quality Control (Tarjetas de inspección) -->
+    <section class="col-span-4 bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+        <div class="px-lg py-md bg-tertiary-container text-white flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined">verified</span>
+                <h4 class="font-bold">Quality Inspection Queue</h4>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 bg-white/20 rounded uppercase tracking-tighter">Station
+                B-12</span>
+        </div>
+        <div class="p-md space-y-4 max-h-[450px] overflow-y-auto">
+            <!-- Inspection Card 1 -->
+            <div class="border border-outline-variant rounded-xl p-4 bg-white hover:shadow-md transition-all">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="text-xs font-bold text-outline uppercase tracking-tight">Active Sample</span>
+                        <p class="font-bold text-lg">Batch #LOT-2488</p>
+                    </div>
+                    <div
+                        class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-md border border-amber-200">
+                        PERSISTENT: SEGUNDA
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div class="p-2 bg-surface-container-low rounded-lg border border-outline-variant/30">
+                        <p class="text-[10px] text-outline uppercase">Defect Rate</p>
+                        <p class="font-bold text-error">4.5%</p>
+                    </div>
+                    <div class="p-2 bg-surface-container-low rounded-lg border border-outline-variant/30">
+                        <p class="text-[10px] text-outline uppercase">Issue</p>
+                        <p class="font-bold text-on-surface">Linking Gap</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        class="flex-1 bg-tertiary text-white py-2 rounded-lg font-bold text-sm hover:bg-tertiary/90 active:scale-[0.98] transition-all"
+                        onclick="this.closest('.border').remove()">
+                        Send to Reprocess
+                    </button>
+                    <button
+                        class="px-3 border border-outline text-on-surface py-2 rounded-lg font-bold text-sm hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined align-middle text-lg">flag</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Inspection Card 2 -->
+            <div class="border border-outline-variant rounded-xl p-4 bg-white opacity-80">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="text-xs font-bold text-outline uppercase tracking-tight">Next in Line</span>
+                        <p class="font-bold text-lg">Batch #LOT-2489</p>
+                    </div>
+                </div>
+                <p class="text-sm text-on-surface-variant mb-4 italic">Pending initial measurement checks...</p>
+                <button
+                    class="w-full border-2 border-dashed border-outline-variant py-2 rounded-lg text-outline font-bold text-sm">
+                    Start Inspection
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- SECTION: Packaging Wizard (3 Pasos) -->
+    <section class="col-span-12 bg-surface border border-outline-variant rounded-2xl shadow-sm">
+        <div class="flex border-b border-outline-variant">
+            <div class="p-lg border-r border-outline-variant w-1/4 bg-surface-container-low/30">
+                <h4 class="font-bold text-primary mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined">inventory</span> Packaging Wizard
+                </h4>
+                <div class="space-y-6 relative">
+                    <!-- Vertical Stepper Visual -->
+                    <div class="absolute left-[15px] top-2 w-0.5 h-[calc(100%-20px)] bg-outline-variant"></div>
+                    <div class="flex gap-4 relative z-10 step-active" id="step-nav-1">
+                        <span
+                            class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm ring-4 ring-primary/20">1</span>
+                        <div>
+                            <p class="font-bold text-sm leading-tight">Individual Pairing</p>
+                            <p class="text-[11px] text-outline">Labels & Tagging</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 relative z-10 text-outline" id="step-nav-2">
+                        <span
+                            class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-sm border border-outline-variant">2</span>
+                        <div>
+                            <p class="font-bold text-sm leading-tight">Dozen Bundling</p>
+                            <p class="text-[11px] text-outline">12 Pairs grouping</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 relative z-10 text-outline" id="step-nav-3">
+                        <span
+                            class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-sm border border-outline-variant">3</span>
+                        <div>
+                            <p class="font-bold text-sm leading-tight">Master Bag</p>
+                            <p class="text-[11px] text-outline">Final Bulk Container</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-lg flex-1">
+                <!-- Step 1: Individual -->
+                <div class="wizard-step" id="step-content-1">
+                    <div class="mb-6">
+                        <h5 class="text-xl font-bold text-on-surface">Step 1: Individual Pairing & Tagging</h5>
+                        <p class="text-on-surface-variant">Confirm individual pair labeling and quality stamp placement.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div
+                            class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                            <div class="w-24 h-24 mb-4 rounded-lg overflow-hidden bg-surface-container-high relative">
+                                <div class="w-full h-full bg-cover bg-center"
+                                    data-alt="A professional close-up of a high-quality cotton athletic sock being tagged with a white barcode label in a bright industrial setting. The lighting is clean and clinical, highlighting the texture of the fabric. The overall style is modern factory management with a focus on precision and quality control."
+                                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgaxc-GL2xhKUXdqHg51avD1fJZH3EeMdfBugDBHqkLp3upDGWmkI4XpxEM4RN7zWsaVDxDzXEgF-_QhA5jQkdDmK8ol1oz0C1GX8MDT3lFIbZrkvuA-j68-21PonYqVI2v5O1lJcI_WtZPi6vyK_Py3fcaVtvbC96wnf7D1jSblUIloks4L2SKxji0zDVDK1pY5V3KoG-i2TmqoxFLZl4XtKbfr1SUGqMXwQXZpP3HRfQGX1ALNE6NNhPh0Avcga0rkZW3B5TBB4')">
+                                </div>
+                            </div>
+                            <p class="font-bold">Model #SKU-990-A</p>
+                            <p class="text-sm text-outline">Confirm tag type: HANGER_GOLD</p>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input checked=""
+                                        class="w-5 h-5 rounded border-primary text-primary focus:ring-primary"
+                                        type="checkbox" />
+                                    <span class="font-medium">Barcode label applied correctly</span>
+                                </label>
+                            </div>
+                            <div class="p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input checked=""
+                                        class="w-5 h-5 rounded border-primary text-primary focus:ring-primary"
+                                        type="checkbox" />
+                                    <span class="font-medium">Quality seal 'Approved' visible</span>
+                                </label>
+                            </div>
+                            <div
+                                class="p-4 bg-surface-container-low border border-outline-variant rounded-xl border-dashed">
+                                <p class="text-xs font-bold text-tertiary mb-1 uppercase">Persistent Alert</p>
+                                <p class="text-sm">Batch includes <strong class="text-tertiary">Segunda</strong> grade
+                                    items. Ensure specific yellow tag is used for 15% of the lot.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Step 2: Dozens (Hidden by default) -->
+                <div class="wizard-step hidden" id="step-content-2">
+                    <div class="mb-6">
+                        <h5 class="text-xl font-bold text-on-surface">Step 2: Dozens Grouping (12 Pairs)</h5>
+                        <p class="text-on-surface-variant">Assemble 12 pairs into internal packaging bands.</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="border-2 border-primary bg-primary-container/10 p-6 rounded-xl text-center">
+                            <span class="material-symbols-outlined text-4xl mb-2 text-primary">view_comfy_alt</span>
+                            <p class="font-bold text-primary">12 Pairs Bundle</p>
+                            <p class="text-xs">Standard Configuration</p>
+                        </div>
+                        <div
+                            class="border border-outline-variant p-6 rounded-xl text-center hover:bg-surface-container-low cursor-pointer transition-colors">
+                            <span class="material-symbols-outlined text-4xl mb-2 text-outline">grid_view</span>
+                            <p class="font-bold">6 Pairs Mini-Bundle</p>
+                            <p class="text-xs">Special Request</p>
+                        </div>
+                        <div
+                            class="border border-outline-variant p-6 rounded-xl text-center hover:bg-surface-container-low cursor-pointer transition-colors">
+                            <span class="material-symbols-outlined text-4xl mb-2 text-outline">style</span>
+                            <p class="font-bold">Custom Pack</p>
+                            <p class="text-xs">Variable Count</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 p-4 bg-surface-container-low rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium">Automatic Counter:</span>
+                            <span class="font-data-mono text-xl font-bold">144 / 1,200 <span
+                                    class="text-xs text-outline font-normal">pairs processed</span></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Step 3: Master Bag (Hidden by default) -->
+                <div class="wizard-step hidden" id="step-content-3">
+                    <div class="mb-6">
+                        <h5 class="text-xl font-bold text-on-surface">Step 3: Master Bag Selection</h5>
+                        <p class="text-on-surface-variant">Select capacity and generate shipping manifest.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-sm font-bold text-on-surface block mb-2">Selector Capacity
+                                    (Dozens)</span>
+                                <select
+                                    class="w-full rounded-lg border-outline-variant bg-white focus:ring-primary focus:border-primary">
+                                    <option>20 Dozens (240 Pairs) - Small</option>
+                                    <option selected="">50 Dozens (600 Pairs) - Medium</option>
+                                    <option>100 Dozens (1200 Pairs) - Master Large</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="text-sm font-bold text-on-surface block mb-2">Destination Facility</span>
+                                <input
+                                    class="w-full rounded-lg border-outline-variant bg-white focus:ring-primary focus:border-primary"
+                                    type="text" value="Main Logistics Center - North Dock" />
+                            </label>
+                        </div>
+                        <div
+                            class="bg-surface-container-low p-6 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center">
+                            <span class="material-symbols-outlined text-5xl text-outline mb-4">qr_code_2</span>
+                            <p class="text-sm font-medium text-on-surface">Label Preview Ready</p>
+                            <button class="mt-4 text-primary font-bold text-sm underline">Download Manifest PDF</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-10 pt-6 border-t border-outline-variant flex justify-between items-center">
+                    <button
+                        class="px-6 py-2.5 rounded-lg font-bold border border-outline hover:bg-surface-container-high transition-all opacity-50 cursor-not-allowed"
+                        id="btn-prev">
+                        Previous
+                    </button>
+                    <button
+                        class="px-8 py-2.5 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
+                        id="btn-next">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>

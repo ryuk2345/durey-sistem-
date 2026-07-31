@@ -32,7 +32,7 @@ router.post('/reset', async (req, res) => {
   d.cronograma_cuotas.length = 0;
   if (d.distribucion_hilo) d.distribucion_hilo.length = 0;
   if (d.proveedores_hilo) d.proveedores_hilo.length = 0;
-  d.maquinas.forEach(m => { m.estado = 'Inactiva'; m.encargado_id = null; });
+  d.maquinas.length = 0;
   d.salones.forEach(s => { s.bultos_actuales = 0; });
   
   await db.resetAll();

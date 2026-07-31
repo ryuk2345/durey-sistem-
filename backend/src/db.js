@@ -60,7 +60,7 @@ const db = {
          recepcion_materia_prima, bitacora_fallas, historico_traslados,
          proveedores_hilo, inventario_hilo, operarios RESTART IDENTITY CASCADE`
       );
-      await pool.query(`UPDATE maquinas SET estado = 'Inactiva', encargado_id = NULL`);
+      await pool.query('DELETE FROM maquinas');
       await pool.query(`UPDATE salones SET bultos_actuales = 0`);
       await pool.query(`UPDATE planilla_inventario SET inicial = 0, stock = 0, ingresos = '{}', ventas = '{}'`);
       console.log('PostgreSQL Database reset completamente a cero.');

@@ -18,16 +18,8 @@ const maestro_modelos = [
   { id: 5, sku: 'CAB-EXT-RAY-02', categoria: 'Caballero', diseno: 'Extra Rayado', calidad: 'Primera', talla: 'L/XL', peso: 320, peso_por_docena_g: 320, costo_hilo_por_gramo: 0.040, costo_mano_obra_acabado: 0.45, material_cost: 12.80, mo_cost: 0.45, precio_venta: 28.00, activo: true }
 ];
 
-const maquinas = [
-  { id: 'A-01', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'angui', color: 'Gris Plata', caracteristicas: '144 agujas, alta velocidad' },
-  { id: 'A-02', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'angui', color: 'Gris Plata', caracteristicas: '144 agujas' },
-  { id: 'V-01', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas verdes', color: 'Verde Oscuro', caracteristicas: '120 agujas, 6 alimentadores' },
-  { id: 'V-02', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas verdes', color: 'Verde Claro', caracteristicas: '120 agujas' },
-  { id: 'AZ-01', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas azules', color: 'Azul Eléctrico', caracteristicas: '132 agujas' },
-  { id: 'AZ-02', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas azules', color: 'Azul Oscuro', caracteristicas: '132 agujas, Jacquard' },
-  { id: 'REM-01', tipo: 'remalladora', estado: 'Inactiva', encargado_id: null, marca: 'otras', color: 'Blanco', caracteristicas: 'Remalladora standard' },
-  { id: 'REM-02', tipo: 'remalladora', estado: 'Inactiva', encargado_id: null, marca: 'otras', color: 'Blanco', caracteristicas: 'Remalladora standard' }
-];
+const maquinas = [];
+
 
 
 const inventario_hilo = [];
