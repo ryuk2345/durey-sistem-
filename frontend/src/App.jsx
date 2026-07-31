@@ -81,6 +81,8 @@ function App() {
   const [nuevaMaquinaForm, setNuevaMaquinaForm] = useState({ id: '', marca: 'angui', color: '', caracteristicas: '', encargado_id: '' });
   const [volteadoForm, setVolteadoForm] = useState({ operario_id: '', docenas: 0, maquina_id: '' });
   const [registroVolteadoList, setRegistroVolteadoList] = useState([]); // Historial local
+  const [filtroMarcaMaquinas, setFiltroMarcaMaquinas] = useState('todas'); // 'todas', 'angui', 'chinas verdes', 'chinas azules'
+
 
   useEffect(() => {
     let interval = null;
@@ -2238,9 +2240,41 @@ function App() {
                 {/* Right: Máquinas por Marcas con Registro Rápido de Producción (col-span-8) */}
                 <div className="lg:col-span-8 space-y-6">
                   
-                  {['angui', 'chinas verdes', 'chinas azules'].map(marcaKey => {
-                    const maqFiltradas = backendState.maquinas.filter(m => m.tipo === 'tejido' && m.marca === marcaKey);
-                    return (
+                  {/* Filtro Interactivo por Marca */}
+                  <div className="bg-white p-4 border border-outline-variant rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h3 className="font-bold text-xs uppercase tracking-wider text-primary">Líneas por Fabricante / Marca</h3>
+                      <p className="text-[11px] text-on-surface-variant font-medium">Filtra las máquinas de tejido de la planta</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1 bg-surface-container-low p-1 rounded-xl border border-outline-variant/60">
+                      {[
+                        { id: 'todas', label: 'Todas', icon: 'apps' },
+                        { id: 'angui', label: 'Angui', icon: 'precision_manufacturing' },
+                        { id: 'chinas verdes', label: 'Chinas Verdes', icon: 'palette' },
+                        { id: 'chinas azules', label: 'Chinas Azules', icon: 'palette' }
+                      ].map(tab => (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setFiltroMarcaMaquinas(tab.id)}
+                          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition active:scale-95 ${
+                            filtroMarcaMaquinas === tab.id
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-secondary hover:bg-surface-container hover:text-on-surface'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[13px]">{tab.icon}</span>
+                          <span>{tab.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {['angui', 'chinas verdes', 'chinas azules']
+                    .filter(marcaKey => filtroMarcaMaquinas === 'todas' || filtroMarcaMaquinas === marcaKey)
+                    .map(marcaKey => {
+                      const maqFiltradas = backendState.maquinas.filter(m => m.tipo === 'tejido' && m.marca === marcaKey);
+                      return (
                       <section key={marcaKey} className="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm space-y-4">
                         <div className="flex justify-between items-center border-b border-outline-variant pb-2">
                           <div className="flex items-center gap-2">
