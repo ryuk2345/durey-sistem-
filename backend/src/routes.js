@@ -131,6 +131,30 @@ router.post('/maquinas/crear', async (req, res) => {
   res.json({ message: `Máquina ${limpiaId} registrada exitosamente (${nuevaMaq.marca})`, maquina: nuevaMaq });
 });
 
+// Endpoint para eliminar una maquina de la DB y memoria
+router.delete('/maquinas/eliminar/:id', async (req, res) => {
+  const { id } = req.params;
+  const limpiaId = id.trim().toUpperCase();
+  
+  if (db.useDb && db.pool) {
+    try {
+      await db.pool.query('DELETE FROM maquinas WHERE id = $1', [limpiaId]);
+    } catch (err) {
+      console.error('Error deleting maquina from DB:', err);
+      return res.status(500).json({ error: 'Error al eliminar la máquina de la base de datos' });
+    }
+  }
+
+  const idx = d.maquinas.findIndex(m => m.id === limpiaId);
+  if (idx !== -1) {
+    d.maquinas.splice(idx, 1);
+  }
+
+  io.emit('maquinas_actualizadas', { maquinas: d.maquinas });
+  res.json({ message: `Máquina ${limpiaId} eliminada exitosamente.` });
+});
+
+
 // Endpoint para registrar la producción unitaria de un turno
 router.post('/produccion/turno/registrar', async (req, res) => {
   const { turno, fecha, produccion } = req.body;

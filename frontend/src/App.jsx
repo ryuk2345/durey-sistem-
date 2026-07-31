@@ -509,7 +509,36 @@ function App() {
     setSelectedMaquinas([]);
   };
 
+  const handleEliminarMaquina = async (maqId) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar la máquina ${maqId}?`)) return;
+
+    if (!connectionError) {
+      try {
+        const res = await fetch(`${API_BASE}/maquinas/eliminar/${maqId}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (!res.ok) { addNotification(data.error, 'error'); return; }
+        addNotification(data.message, 'success');
+        fetchData();
+      } catch {
+        addNotification('Error de red al eliminar la máquina', 'error');
+      }
+    } else {
+      // Simulación local
+      setBackendState(prev => {
+        const newMaq = prev.maquinas.filter(m => m.id !== maqId);
+        addNotification(`Máquina ${maqId} eliminada con éxito (simulado)`, 'success');
+        return {
+          ...prev,
+          maquinas: newMaq
+        };
+      });
+    }
+  };
+
   const handleCrearMaquinaTejido = async (e) => {
+
     e.preventDefault();
     if (!nuevaMaquinaForm.id) {
       addNotification("El código identificador es obligatorio.", "error");
@@ -2243,10 +2272,21 @@ function App() {
                                         {encargado ? encargado.nombre : 'Sin operario'}
                                       </p>
                                     </div>
-                                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      {m.color || 'Sin color'}
-                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {m.color || 'Sin color'}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleEliminarMaquina(m.id)}
+                                        className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1 rounded transition flex items-center justify-center"
+                                        title="Eliminar Máquina"
+                                      >
+                                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                                      </button>
+                                    </div>
                                   </div>
+
 
                                   {/* Características */}
                                   {m.caracteristicas && (
