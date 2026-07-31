@@ -31,8 +31,23 @@ CREATE TABLE IF NOT EXISTS maquinas (
     id VARCHAR(15) PRIMARY KEY,
     tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('tejido', 'remalladora')),
     estado VARCHAR(20) NOT NULL DEFAULT 'Inactiva' CHECK (estado IN ('Inactiva', 'Tejiendo', 'Averiada', 'Activa')),
-    encargado_id INT REFERENCES operarios(id) ON DELETE SET NULL
+    encargado_id INT REFERENCES operarios(id) ON DELETE SET NULL,
+    marca VARCHAR(50) DEFAULT 'angui',
+    color VARCHAR(50),
+    caracteristicas TEXT
 );
+
+-- 3.1 Producción por máquina y turno (Tejido unitario)
+CREATE TABLE IF NOT EXISTS produccion_maquina_turno (
+    id SERIAL PRIMARY KEY,
+    maquina_id VARCHAR(15) REFERENCES maquinas(id) ON DELETE CASCADE,
+    operario_id INT REFERENCES operarios(id) ON DELETE SET NULL,
+    turno VARCHAR(20) CHECK (turno IN ('Dia', 'Noche')),
+    docenas INT NOT NULL DEFAULT 0,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_registro TIMESTAMP DEFAULT NOW()
+);
+
 
 -- 4. Inventario de hilo (por cajas)
 CREATE TABLE IF NOT EXISTS inventario_hilo (
@@ -262,7 +277,7 @@ BEGIN
 END $$;
 
 -- Remalladoras (Inactivas sin operario)
-INSERT INTO maquinas (id, tipo, estado) VALUES
+INSERT INTO maquinas (id, tipo, estado) VALUES 
     ('REM-01', 'remalladora', 'Inactiva'),
     ('REM-02', 'remalladora', 'Inactiva')
 ON CONFLICT (id) DO NOTHING;

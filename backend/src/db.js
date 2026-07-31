@@ -168,9 +168,23 @@ const db = {
     if (!useDb || !pool) return maq;
     try {
       await pool.query(
-        `INSERT INTO maquinas (id, tipo, estado, encargado_id) VALUES ($1, $2, $3, $4)
-         ON CONFLICT (id) DO UPDATE SET estado = EXCLUDED.estado, encargado_id = EXCLUDED.encargado_id`,
-        [maq.id, maq.tipo || 'tejido', maq.estado || 'Inactiva', maq.encargado_id || null]
+        `INSERT INTO maquinas (id, tipo, estado, encargado_id, marca, color, caracteristicas) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (id) DO UPDATE SET 
+           estado = EXCLUDED.estado, 
+           encargado_id = EXCLUDED.encargado_id,
+           marca = EXCLUDED.marca,
+           color = EXCLUDED.color,
+           caracteristicas = EXCLUDED.caracteristicas`,
+        [
+          maq.id, 
+          maq.tipo || 'tejido', 
+          maq.estado || 'Inactiva', 
+          maq.encargado_id || null,
+          maq.marca || 'angui',
+          maq.color || '',
+          maq.caracteristicas || ''
+        ]
       );
       return maq;
     } catch (err) {
@@ -178,6 +192,23 @@ const db = {
       return maq;
     }
   },
+
+  // Guardar producción por máquina y turno
+  saveProduccionTurno: async (reg) => {
+    if (!useDb || !pool) return reg;
+    try {
+      const res = await pool.query(
+        `INSERT INTO produccion_maquina_turno (maquina_id, operario_id, turno, docenas, fecha)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [reg.maquina_id, reg.operario_id || null, reg.turno, reg.docenas || 0, reg.fecha || new Date().toISOString().split('T')[0]]
+      );
+      return res.rows[0];
+    } catch (err) {
+      console.error('Error saving produccion_maquina_turno to DB:', err);
+      return reg;
+    }
+  },
+
 
   // Sync Lote
   saveLote: async (lote) => {
@@ -407,9 +438,23 @@ const db = {
           if (m) {
             m.estado = r.estado;
             m.encargado_id = r.encargado_id;
+            m.marca = r.marca || 'angui';
+            m.color = r.color || '';
+            m.caracteristicas = r.caracteristicas || '';
+          } else {
+            d.maquinas.push({
+              id: r.id,
+              tipo: r.tipo || 'tejido',
+              estado: r.estado || 'Inactiva',
+              encargado_id: r.encargado_id || null,
+              marca: r.marca || 'angui',
+              color: r.color || '',
+              caracteristicas: r.caracteristicas || ''
+            });
           }
         });
       }
+
 
       const lotes = await pool.query('SELECT * FROM lotes_produccion ORDER BY id ASC');
       if (lotes.rows.length) {

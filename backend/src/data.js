@@ -18,12 +18,17 @@ const maestro_modelos = [
   { id: 5, sku: 'CAB-EXT-RAY-02', categoria: 'Caballero', diseno: 'Extra Rayado', calidad: 'Primera', talla: 'L/XL', peso: 320, peso_por_docena_g: 320, costo_hilo_por_gramo: 0.040, costo_mano_obra_acabado: 0.45, material_cost: 12.80, mo_cost: 0.45, precio_venta: 28.00, activo: true }
 ];
 
-const maquinas = [];
-for (let i = 1; i <= 64; i++) {
-  maquinas.push({ id: `M-${String(i).padStart(2, '0')}`, tipo: 'tejido', estado: 'Inactiva', encargado_id: null });
-}
-maquinas.push({ id: 'REM-01', tipo: 'remalladora', estado: 'Inactiva', encargado_id: null });
-maquinas.push({ id: 'REM-02', tipo: 'remalladora', estado: 'Inactiva', encargado_id: null });
+const maquinas = [
+  { id: 'A-01', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'angui', color: 'Gris Plata', caracteristicas: '144 agujas, alta velocidad' },
+  { id: 'A-02', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'angui', color: 'Gris Plata', caracteristicas: '144 agujas' },
+  { id: 'V-01', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas verdes', color: 'Verde Oscuro', caracteristicas: '120 agujas, 6 alimentadores' },
+  { id: 'V-02', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas verdes', color: 'Verde Claro', caracteristicas: '120 agujas' },
+  { id: 'AZ-01', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas azules', color: 'Azul Eléctrico', caracteristicas: '132 agujas' },
+  { id: 'AZ-02', tipo: 'tejido', estado: 'Inactiva', encargado_id: null, marca: 'chinas azules', color: 'Azul Oscuro', caracteristicas: '132 agujas, Jacquard' },
+  { id: 'REM-01', tipo: 'remalladora', estado: 'Inactiva', encargado_id: null, marca: 'otras', color: 'Blanco', caracteristicas: 'Remalladora standard' },
+  { id: 'REM-02', tipo: 'remalladora', estado: 'Inactiva', encargado_id: null, marca: 'otras', color: 'Blanco', caracteristicas: 'Remalladora standard' }
+];
+
 
 const inventario_hilo = [];
 const distribucion_hilo = [];
@@ -59,10 +64,14 @@ const planilla_inventario = maestro_modelos.map(m => ({
 const resetHilo = () => [];
 const proveedores_hilo = [];
 
+const produccion_maquina_turno = [];
+
 module.exports = {
   genId, usuarios, operarios, maestro_modelos, maquinas, inventario_hilo, distribucion_hilo, proveedores_hilo,
   bultos_master, salones, lotes_produccion, clientes, ordenes_venta,
   ordenes_compra, bitacora_fallas, recepcion_materia_prima,
-  historico_traslados, cronograma_cuotas, planilla_inventario, resetHilo
+  historico_traslados, cronograma_cuotas, planilla_inventario, resetHilo,
+  produccion_maquina_turno
 };
+
 

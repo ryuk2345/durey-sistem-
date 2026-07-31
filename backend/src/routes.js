@@ -108,8 +108,8 @@ router.post('/maquinas/asignar', async (req, res) => {
 });
 
 router.post('/maquinas/crear', async (req, res) => {
-  const { id, tipo, encargado_id } = req.body;
-  if (!id || !tipo) return res.status(400).json({ error: 'Faltan campos obligatorios: id, tipo' });
+  const { id, tipo, encargado_id, marca, color, caracteristicas } = req.body;
+  if (!id) return res.status(400).json({ error: 'El código identificador (id) es obligatorio.' });
 
   const limpiaId = id.trim().toUpperCase();
   const existe = d.maquinas.find(m => m.id === limpiaId);
@@ -117,16 +117,53 @@ router.post('/maquinas/crear', async (req, res) => {
 
   const nuevaMaq = {
     id: limpiaId,
-    tipo: tipo.toLowerCase(),
+    tipo: (tipo || 'tejido').toLowerCase(),
     estado: 'Inactiva',
-    encargado_id: encargado_id ? parseInt(encargado_id) : null
+    encargado_id: encargado_id ? parseInt(encargado_id) : null,
+    marca: marca || 'angui',
+    color: color || '',
+    caracteristicas: caracteristicas || ''
   };
 
   await db.saveMaquina(nuevaMaq);
   d.maquinas.push(nuevaMaq);
   io.emit('maquinas_actualizadas', { maquinas: d.maquinas });
-  res.json({ message: `Máquina ${limpiaId} registrada exitosamente (${tipo})`, maquina: nuevaMaq });
+  res.json({ message: `Máquina ${limpiaId} registrada exitosamente (${nuevaMaq.marca})`, maquina: nuevaMaq });
 });
+
+// Endpoint para registrar la producción unitaria de un turno
+router.post('/produccion/turno/registrar', async (req, res) => {
+  const { turno, fecha, produccion } = req.body;
+  if (!turno || !produccion || !Array.isArray(produccion)) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios: turno y lista de produccion' });
+  }
+
+  const resultados = [];
+  for (const item of produccion) {
+    const reg = {
+      maquina_id: item.maquina_id,
+      operario_id: item.operario_id ? parseInt(item.operario_id) : null,
+      turno: turno,
+      docenas: parseInt(item.docenas) || 0,
+      fecha: fecha || new Date().toISOString().split('T')[0]
+    };
+    
+    // Guardar en base de datos
+    const saved = await db.saveProduccionTurno(reg);
+    
+    // Guardar en memoria
+    d.produccion_maquina_turno.push({
+      ...reg,
+      id: saved.id || d.produccion_maquina_turno.length + 1
+    });
+    resultados.push(saved);
+  }
+
+  // Notificar al frontend
+  io.emit('produccion_turno_registrada', { turno, fecha });
+  res.json({ message: `Producción de turno ${turno} registrada exitosamente.`, registros: resultados });
+});
+
 
 router.post('/maquinas/iniciar', async (req, res) => {
   const { maquina_id, maquina_ids, hilo_id, color, material, cantidad_estimada } = req.body;

@@ -73,6 +73,28 @@ function App() {
   const [selectedOperarioIdReporte, setSelectedOperarioIdReporte] = useState(null);
   const [reportePersonal, setReportePersonal] = useState([]);
 
+  // NUEVO: Estados para Módulos Independientes de Tejido, Turnos y Volteado
+  const [turnoActivo, setTurnoActivo] = useState('Dia'); // 'Dia' o 'Noche'
+  const [turnoTimer, setTurnoTimer] = useState(0); // Segundos transcurridos
+  const [isTurnoCorriendo, setIsTurnoCorriendo] = useState(false);
+  const [produccionRegistro, setProduccionRegistro] = useState({}); // { [maquina_id]: docenas }
+  const [nuevaMaquinaForm, setNuevaMaquinaForm] = useState({ id: '', marca: 'angui', color: '', caracteristicas: '', encargado_id: '' });
+  const [volteadoForm, setVolteadoForm] = useState({ operario_id: '', docenas: 0, maquina_id: '' });
+  const [registroVolteadoList, setRegistroVolteadoList] = useState([]); // Historial local
+
+  useEffect(() => {
+    let interval = null;
+    if (isTurnoCorriendo) {
+      interval = setInterval(() => {
+        setTurnoTimer(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isTurnoCorriendo]);
+
+
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
 
   useEffect(() => {
@@ -487,7 +509,129 @@ function App() {
     setSelectedMaquinas([]);
   };
 
+  const handleCrearMaquinaTejido = async (e) => {
+    e.preventDefault();
+    if (!nuevaMaquinaForm.id) {
+      addNotification("El código identificador es obligatorio.", "error");
+      return;
+    }
+    const payload = {
+      id: nuevaMaquinaForm.id.trim().toUpperCase(),
+      tipo: 'tejido',
+      marca: nuevaMaquinaForm.marca,
+      color: nuevaMaquinaForm.color,
+      caracteristicas: nuevaMaquinaForm.caracteristicas,
+      encargado_id: nuevaMaquinaForm.encargado_id ? parseInt(nuevaMaquinaForm.encargado_id) : null
+    };
+
+    if (!connectionError) {
+      try {
+        const res = await fetch(`${API_BASE}/maquinas/crear`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) { addNotification(data.error, 'error'); return; }
+        addNotification(data.message, 'success');
+        setNuevaMaquinaForm({ id: '', marca: 'angui', color: '', caracteristicas: '', encargado_id: '' });
+        fetchData();
+      } catch {
+        addNotification('Error de red al crear máquina', 'error');
+      }
+    } else {
+      // Simulación local
+      setBackendState(prev => {
+        const existe = prev.maquinas.find(m => m.id === payload.id);
+        if (existe) {
+          addNotification(`Error: La máquina ${payload.id} ya existe.`, 'error');
+          return prev;
+        }
+        const nueva = {
+          ...payload,
+          estado: 'Inactiva'
+        };
+        addNotification(`Máquina ${payload.id} registrada con éxito (simulado)`, 'success');
+        return {
+          ...prev,
+          maquinas: [...prev.maquinas, nueva]
+        };
+      });
+      setNuevaMaquinaForm({ id: '', marca: 'angui', color: '', caracteristicas: '', encargado_id: '' });
+    }
+  };
+
+  const handleRegistrarProduccionTurno = async () => {
+    const produccionList = Object.entries(produccionRegistro)
+      .map(([mid, cant]) => {
+        const maq = backendState.maquinas.find(m => m.id === mid);
+        return {
+          maquina_id: mid,
+          operario_id: maq ? maq.encargado_id : null,
+          docenas: cant
+        };
+      })
+      .filter(p => p.docenas > 0);
+
+    if (produccionList.length === 0) {
+      addNotification("No hay producción que registrar. Ingresa docenas en al menos una máquina.", "warning");
+      return;
+    }
+
+    const payload = {
+      turno: turnoActivo,
+      fecha: new Date().toISOString().split('T')[0],
+      produccion: produccionList
+    };
+
+    if (!connectionError) {
+      try {
+        const res = await fetch(`${API_BASE}/produccion/turno/registrar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) { addNotification(data.error, 'error'); return; }
+        addNotification(data.message, 'success');
+        setProduccionRegistro({});
+        setIsTurnoCorriendo(false);
+        setTurnoTimer(0);
+        fetchData();
+      } catch {
+        addNotification('Error de red al registrar producción', 'error');
+      }
+    } else {
+      // Simulación local
+      addNotification(`Producción del Turno ${turnoActivo} guardada con éxito (simulado)`, 'success');
+      setProduccionRegistro({});
+      setIsTurnoCorriendo(false);
+      setTurnoTimer(0);
+    }
+  };
+
+  const handleRegistrarVolteadoUnitario = (e) => {
+    e.preventDefault();
+    if (!volteadoForm.operario_id || !volteadoForm.docenas) {
+      addNotification("Faltan campos obligatorios para registrar volteado.", "error");
+      return;
+    }
+    const op = backendState.operarios.find(o => o.id === parseInt(volteadoForm.operario_id));
+    const newReg = {
+      id: registroVolteadoList.length + 1,
+      operario_nombre: op ? op.nombre : 'Sin nombre',
+      docenas: parseInt(volteadoForm.docenas),
+      maquina_id: volteadoForm.maquina_id || 'N/A',
+      fecha: new Date().toLocaleDateString('es-PE')
+    };
+
+    setRegistroVolteadoList(prev => [newReg, ...prev]);
+    addNotification(`Volteado de ${volteadoForm.docenas} docenas registrado con éxito.`, "success");
+    setVolteadoForm({ operario_id: '', docenas: 0, maquina_id: '' });
+  };
+
   const handleStartTejido = async (e) => {
+
     e.preventDefault();
     const payload = {
       maquina_ids: tejidoForm.maquinas_seleccionadas,
@@ -1836,522 +1980,314 @@ function App() {
             </div>
           )}
           {activeTab === 'tejido' && (
+
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Left Side: Interactive Machine Grid (col-span-2) */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                      <h2 className="font-bold text-2xl text-on-surface">Monitor de Producción</h2>
-                      <p className="text-sm text-on-surface-variant">Control de máquinas en tiempo real</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={generatePDFTejido}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">picture_as_pdf</span>
-                        Reporte Semanal PDF
-                      </button>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-100">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                        {backendState.maquinas.filter(m => m.estado === 'Tejiendo').length} Activas
-                      </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-100">
-                        <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                        {backendState.maquinas.filter(m => m.estado === 'Inactiva' && m.tipo === 'tejido').length} Inactivas
-                      </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full text-xs font-bold border border-rose-100">
-                        <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                        {backendState.maquinas.filter(m => m.estado === 'Averiada').length} Averiada
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 64 Machines Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-2">
-                    {backendState.maquinas.filter(m => m.tipo === 'tejido').map(m => {
-                      const isSelected = selectedMaquinas.includes(m.id);
-                      const encargado = backendState.operarios.find(o => o.id === m.encargado_id);
-                      const lot = backendState.lotes.find(l => l.maquina_id === m.id && l.estado === 'Tejiendo');
-                      return (
-                        <div
-                          key={m.id}
-                          className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative ${
-                            isSelected ? 'ring-2 ring-primary border-primary' : 'border-outline-variant'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <p className="font-mono text-primary font-bold text-sm">{m.id}</p>
-                              <p className="text-[10px] text-on-surface-variant font-semibold uppercase tracking-wider truncate max-w-[100px]">
-                                {encargado ? encargado.nombre.split(' ')[0] : 'Sin operario'}
-                              </p>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                              m.estado === 'Tejiendo' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              m.estado === 'Averiada' ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' :
-                              'bg-surface-variant text-on-surface-variant border-outline-variant'
-                            }`}>
-                              {m.estado === 'Tejiendo' ? 'En Marcha' : m.estado === 'Averiada' ? 'Error Crítico' : 'En Pausa'}
-                            </span>
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="w-full bg-surface-container-low h-1 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full transition-all duration-1000 ${
-                                  m.estado === 'Tejiendo' ? 'bg-primary' : m.estado === 'Averiada' ? 'bg-error' : 'bg-transparent'
-                                }`}
-                                style={{ width: m.estado === 'Tejiendo' ? '65%' : m.estado === 'Averiada' ? '12%' : '0%' }}
-                              />
-                            </div>
-                            <div className="flex gap-1.5">
-                              {m.estado === 'Inactiva' ? (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    // Seleccionar máquina para encender
-                                    if (selectedMaquinas.includes(m.id)) {
-                                      setSelectedMaquinas(selectedMaquinas.filter(id => id !== m.id));
-                                    } else {
-                                      setSelectedMaquinas([...selectedMaquinas, m.id]);
-                                    }
-                                  }}
-                                  className={`flex-1 py-1 text-[10px] font-bold rounded transition-colors active:scale-95 ${
-                                    isSelected ? 'bg-primary-container text-primary border border-primary' : 'bg-primary text-white hover:bg-primary-container'
-                                  }`}
-                                >
-                                  {isSelected ? 'ELEGIDA' : 'INICIAR'}
-                                </button>
-                              ) : m.estado === 'Tejiendo' ? (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setFinTejidoMaq(m.id);
-                                    if (lot) {
-                                      setPrimeraCalidad(lot.cantidad_pares_estimada - 5);
-                                      setSegundaCalidad(5);
-                                    }
-                                  }}
-                                  className="flex-1 py-1 text-[10px] font-bold rounded border border-outline text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-95"
-                                >
-                                  PARAR
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  disabled
-                                  className="flex-1 py-1 text-[10px] font-bold rounded bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed"
-                                >
-                                  AVERÍA
-                                </button>
-                              )}
-
-                              {m.estado === 'Tejiendo' && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleReportBreakdown(m.id)}
-                                  className="px-2 py-1 text-[10px] font-bold rounded bg-error text-white hover:bg-error-container transition-colors active:scale-95"
-                                  title="Reportar avería"
-                                >
-                                  FALLA
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Volteado Machine Queue */}
-                  <section className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
-                    <div className="px-4 py-3 bg-primary text-white flex justify-between items-center">
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm font-bold">rotate_right</span>
-                        <h4 className="font-bold text-xs uppercase tracking-wider">Cola de Volteado (Máquina)</h4>
-                      </div>
-                      <span className="text-[9px] font-bold px-2 py-0.5 bg-white/20 rounded uppercase tracking-wider">Paso 2 del Proceso</span>
-                    </div>
-                    <div className="p-4 space-y-4 max-h-[300px] overflow-y-auto">
-                      {backendState.lotes.filter(l => l.estado === 'Listo para Volteado').map((lot, index) => (
-                        <div key={index} className="flex flex-col sm:flex-row justify-between items-start sm:items-center border border-outline-variant rounded-xl p-3 bg-white hover:shadow-md transition-all gap-3">
-                          <div>
-                            <span className="text-[9px] font-bold text-outline uppercase tracking-tight">Lote en Espera</span>
-                            <p className="font-bold text-sm">Batch #LOT-{lot.id} - Calcetín {lot.material}</p>
-                            <p className="text-[10px] text-on-surface-variant font-bold">Color: {lot.color} | Cantidad: {lot.cantidad_pares_estimada} pares</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleVoltearLote(lot.id)}
-                            className="bg-primary text-white py-1.5 px-4 rounded-lg font-bold text-xs hover:bg-primary/90 transition active:scale-95 flex items-center gap-1 self-stretch sm:self-auto justify-center"
-                          >
-                            <span className="material-symbols-outlined text-sm">rotate_right</span>
-                            Registrar Volteado
-                          </button>
-                        </div>
-                      ))}
-                      {backendState.lotes.filter(l => l.estado === 'Listo para Volteado').length === 0 && (
-                        <p className="text-xs text-on-surface-variant text-center py-4 italic">No hay lotes en espera de volteado actualmente.</p>
-                      )}
-                    </div>
-                  </section>
+              {/* Header Info */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="font-bold text-2xl text-on-surface">Tejido y Volteado (Módulos Unitarios)</h2>
+                  <p className="text-sm text-on-surface-variant">Gestión de máquinas por marcas, control de turnos y registro de producción unitaria.</p>
                 </div>
-
-                {/* Right Side: Sidebar Panels (col-span-1) */}
-                <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl space-y-6">
-                  
-                  {/* Fin de Tejido Form (Inspección y Clasificación) */}
-                  {finTejidoMaq && (
-                    <div className="p-4 bg-primary-container text-on-primary-container rounded-xl border border-primary-container/30 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-bold text-sm">Fin de Tejido: Máquina {finTejidoMaq}</h4>
-                        <button onClick={() => setFinTejidoMaq(null)} className="text-secondary hover:text-on-surface">
-                          <span className="material-symbols-outlined text-sm">close</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleClasificarLote} className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2 text-on-surface">
-                          <div>
-                            <label className="text-[10px] font-bold uppercase text-secondary">Medias de Primera</label>
-                            <input
-                              type="number"
-                              value={primeraCalidad}
-                              onChange={(e) => setPrimeraCalidad(parseInt(e.target.value) || 0)}
-                              className="w-full mt-1 p-1.5 border border-outline-variant bg-surface rounded text-xs font-bold"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] font-bold uppercase text-secondary">Medias de Segunda</label>
-                            <input
-                              type="number"
-                              value={segundaCalidad}
-                              onChange={(e) => setSegundaCalidad(parseInt(e.target.value) || 0)}
-                              className="w-full mt-1 p-1.5 border border-outline-variant bg-surface rounded text-xs font-bold"
-                            />
-                          </div>
-                        </div>
-                        <button
-                          type="submit"
-                          className="w-full bg-emerald-600 text-on-primary py-2 rounded-lg font-bold text-xs"
-                        >
-                          Clasificar e Inspeccionar Lote
-                        </button>
-                      </form>
-                    </div>
-                  )}
-
-                  {/* Encargado Assignment */}
-                  <div>
-                    <h4 className="font-bold text-sm text-primary mb-3 uppercase tracking-wider">Asignar Encargado</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-xs font-semibold text-secondary">Encargado de Tejido</label>
-                        <select
-                          value={selectedEncargado}
-                          onChange={(e) => setSelectedEncargado(e.target.value)}
-                          className="w-full mt-1 p-2 border border-outline-variant bg-surface rounded-lg text-xs"
-                        >
-                          <option value="">-- Seleccionar operario --</option>
-                          {backendState.operarios.map(o => (
-                            <option key={o.id} value={o.id}>
-                              {o.nombre} ({o.tipo_contrato === 'jornal' ? `Sueldo Fijo: S/ ${Number(o.tarifa || 0).toFixed(2)}/día` : `A Destajo: S/ ${Number(o.tarifa || 0).toFixed(2)}/docena`})
-                            </option>
-                          ))}
-                          {backendState.operarios.length === 0 && (
-                            <option value="">Sin operarios creados aún</option>
-                          )}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-secondary">Máquinas seleccionadas ({selectedMaquinas.length})</label>
-                        <div className="text-xs bg-surface p-2 rounded-lg border border-outline-variant min-h-[40px] flex flex-wrap gap-1 items-center">
-                          {selectedMaquinas.map(id => (
-                            <span key={id} className="bg-primary text-on-primary px-2 py-0.5 rounded font-mono text-[10px]">{id}</span>
-                          ))}
-                          {selectedMaquinas.length === 0 && <span className="text-secondary text-[11px]">Selecciona máquinas en la grilla para asignarlas</span>}
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleAssignEncargado}
-                        className="w-full bg-primary text-on-primary py-2 rounded-lg font-bold hover:bg-primary-container transition text-xs"
-                      >
-                        Confirmar Asignación
-                      </button>
+                <div className="flex items-center gap-3">
+                  {/* Cronómetro del Turno */}
+                  <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border shadow-xs transition-all ${
+                    isTurnoCorriendo ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-surface border-outline-variant text-on-surface-variant'
+                  }`}>
+                    <span className="material-symbols-outlined text-lg animate-spin-slow">schedule</span>
+                    <div className="text-left">
+                      <p className="text-[9px] font-bold uppercase tracking-wider">Turno {turnoActivo} Activo</p>
+                      <p className="font-mono font-black text-sm">
+                        {(() => {
+                          const hrs = Math.floor(turnoTimer / 3600).toString().padStart(2, '0');
+                          const mins = Math.floor((turnoTimer % 3600) / 60).toString().padStart(2, '0');
+                          const secs = (turnoTimer % 60).toString().padStart(2, '0');
+                          return `${hrs}:${mins}:${secs}`;
+                        })()}
+                      </p>
                     </div>
                   </div>
-
-                  <hr className="border-outline-variant" />
-
-                  {/* Start knitting machine */}
-                  <div>
-                    <h4 className="font-bold text-sm text-primary mb-3 uppercase tracking-wider">Cargar Hilo e Iniciar Proceso</h4>
-                    <form onSubmit={handleStartTejido} className="space-y-3">
-                      <div>
-                        <label className="text-xs font-semibold text-secondary">Seleccione Encargado</label>
-                        <select
-                          value={tejidoForm.encargado_id}
-                          onChange={(e) => {
-                            const encId = parseInt(e.target.value) || '';
-                            const maquinasEnc = backendState.maquinas.filter(m => m.tipo === 'tejido' && m.encargado_id === encId);
-                            const inactivas = maquinasEnc.filter(m => m.estado === 'Inactiva').map(m => m.id);
-                            setTejidoForm({
-                              ...tejidoForm,
-                              encargado_id: encId,
-                              maquinas_seleccionadas: inactivas
-                            });
-                          }}
-                          className="w-full mt-1 p-2 border border-outline-variant bg-surface rounded-lg text-xs"
+                  {/* Botones de Control de Turno */}
+                  <div className="flex gap-1.5 bg-surface-container-low p-1.5 rounded-xl border border-outline-variant shadow-xs">
+                    <select
+                      value={turnoActivo}
+                      onChange={(e) => setTurnoActivo(e.target.value)}
+                      disabled={isTurnoCorriendo}
+                      className="bg-white border border-outline-variant p-1 rounded-lg text-xs font-bold focus:ring-2 focus:ring-primary-container outline-none"
+                    >
+                      <option value="Dia">Turno Día</option>
+                      <option value="Noche">Turno Noche</option>
+                    </select>
+                    {!isTurnoCorriendo ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsTurnoCorriendo(true)}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95"
+                      >
+                        <span className="material-symbols-outlined text-sm">play_arrow</span> Iniciar
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setIsTurnoCorriendo(false)}
+                          className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95"
                         >
-                          <option value="">-- Seleccionar encargado --</option>
-                          {backendState.operarios.filter(o => o.tipo_contrato === 'jornal').map(o => (
-                            <option key={o.id} value={o.id}>{o.nombre} (Jornal)</option>
-                          ))}
-                        </select>
-                      </div>
+                          <span className="material-symbols-outlined text-sm">pause</span> Pausar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRegistrarProduccionTurno}
+                          className="px-3 py-1 bg-primary text-white rounded-lg text-xs font-black transition flex items-center gap-1 active:scale-95 shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-sm">save</span> Cerrar Turno
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                      {/* Mostrar las máquinas asociadas al encargado */}
-                      {tejidoForm.encargado_id && (() => {
-                        const maquinasEnc = backendState.maquinas.filter(m => m.tipo === 'tejido' && m.encargado_id === tejidoForm.encargado_id);
-                        if (maquinasEnc.length === 0) {
-                          return (
-                            <p className="text-xs text-error font-semibold py-1">⚠️ Este encargado no tiene máquinas asignadas.</p>
-                          );
-                        }
-
-                        return (
-                          <div className="bg-surface-container p-3 rounded-lg border border-outline-variant space-y-2">
-                            <div className="flex justify-between items-center text-xs font-bold text-secondary uppercase">
-                              <span>Línea de producción:</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const inactivas = maquinasEnc.filter(m => m.estado === 'Inactiva').map(m => m.id);
-                                  const allSelected = tejidoForm.maquinas_seleccionadas.length === inactivas.length;
-                                  setTejidoForm({
-                                    ...tejidoForm,
-                                    maquinas_seleccionadas: allSelected ? [] : inactivas
-                                  });
-                                }}
-                                className="text-[10px] text-primary lowercase hover:underline font-bold"
-                              >
-                                {tejidoForm.maquinas_seleccionadas.length === maquinasEnc.filter(m => m.estado === 'Inactiva').length ? 'Desmarcar todas' : 'Seleccionar inactivas'}
-                              </button>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 max-h-[120px] overflow-y-auto pr-1">
-                              {maquinasEnc.map(m => {
-                                const isInactive = m.estado === 'Inactiva';
-                                return (
-                                  <label key={m.id} className={`flex items-center gap-2 p-1.5 rounded border text-xs cursor-pointer select-none transition ${
-                                    m.estado === 'Tejiendo' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 opacity-60 cursor-not-allowed' :
-                                    m.estado === 'Averiada' ? 'bg-error-container border-error text-error opacity-60 cursor-not-allowed' :
-                                    tejidoForm.maquinas_seleccionadas.includes(m.id) ? 'bg-primary-container border-primary text-primary font-bold' : 'bg-surface border-outline-variant text-secondary'
-                                  }`}>
-                                    <input
-                                      type="checkbox"
-                                      disabled={!isInactive}
-                                      checked={tejidoForm.maquinas_seleccionadas.includes(m.id)}
-                                      onChange={() => {
-                                        if (!isInactive) return;
-                                        const ids = tejidoForm.maquinas_seleccionadas.includes(m.id)
-                                          ? tejidoForm.maquinas_seleccionadas.filter(id => id !== m.id)
-                                          : [...tejidoForm.maquinas_seleccionadas, m.id];
-                                        setTejidoForm({
-                                          ...tejidoForm,
-                                          maquinas_seleccionadas: ids
-                                        });
-                                      }}
-                                      className="accent-primary"
-                                    />
-                                    <span>{m.id}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <label className="text-xs font-bold text-secondary uppercase font-sans tracking-wide">Materiales / Hilos a Cargar</label>
-                          <button
-                            type="button"
-                            onClick={() => setTejidoForm(prev => ({
-                              ...prev,
-                              hilos: [...prev.hilos, { hilo_id: '', cajas_por_maquina: 1 }]
-                            }))}
-                            className="text-primary hover:text-primary-container text-[11px] font-extrabold flex items-center gap-0.5"
-                          >
-                            <span className="material-symbols-outlined text-[14px]">add_circle</span> Añadir Hilo
-                          </button>
-                        </div>
-
-                        {tejidoForm.hilos.map((item, index) => {
-                          return (
-                            <div key={index} className="border border-outline-variant p-2.5 rounded-lg bg-surface space-y-2 relative">
-                              {tejidoForm.hilos.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => setTejidoForm(prev => ({
-                                    ...prev,
-                                    hilos: prev.hilos.filter((_, i) => i !== index)
-                                  }))}
-                                  className="absolute top-1.5 right-1.5 text-outline hover:text-error text-xs"
-                                  title="Quitar material"
-                                >
-                                  <span className="material-symbols-outlined text-[14px]">delete</span>
-                                </button>
-                              )}
-
-                              <div>
-                                <label className="text-[9px] font-bold text-outline uppercase block">Hilo {index + 1}</label>
-                                {backendState.inventario_hilo.length > 0 ? (
-                                  <select
-                                    value={item.hilo_id}
-                                    onChange={(e) => {
-                                      const selectedId = parseInt(e.target.value) || '';
-                                      const updatedHilos = [...tejidoForm.hilos];
-                                      updatedHilos[index] = { ...updatedHilos[index], hilo_id: selectedId };
-                                      setTejidoForm({ ...tejidoForm, hilos: updatedHilos });
-                                    }}
-                                    className="w-full mt-0.5 p-1.5 border border-outline-variant bg-surface rounded text-xs font-bold text-primary outline-none"
-                                    required
-                                  >
-                                    <option value="">-- Seleccionar Bobina --</option>
-                                    {backendState.inventario_hilo.map(h => (
-                                      <option key={h.id} value={h.id}>
-                                        {h.material} {h.color} ({h.stock_cajas || 0} cajas disp)
-                                      </option>
-                                    ))}
-                                  </select>
-                                ) : (
-                                  <p className="text-[10px] text-error font-semibold py-1">
-                                    ⚠️ Registre compras en la pestaña "Materia Prima".
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="text-[9px] font-bold text-outline uppercase">Cajas / Máquina</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={item.cajas_por_maquina}
-                                    onChange={(e) => {
-                                      const val = parseInt(e.target.value) || 1;
-                                      const updatedHilos = [...tejidoForm.hilos];
-                                      updatedHilos[index] = { ...updatedHilos[index], cajas_por_maquina: val };
-                                      setTejidoForm({ ...tejidoForm, hilos: updatedHilos });
-                                    }}
-                                    className="w-full p-1 border border-outline-variant rounded font-mono text-xs text-center font-bold text-primary"
-                                    required
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
+              {/* Bento Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                {/* Left: Creación de Máquina y Volteado (col-span-4) */}
+                <div className="lg:col-span-4 space-y-6">
+                  
+                  {/* Creación de Máquina de Tejido */}
+                  <section className="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm space-y-4">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-primary flex items-center gap-1.5 border-b border-outline-variant pb-2">
+                      <span className="material-symbols-outlined text-sm">add_circle</span>
+                      Registrar Nueva Máquina
+                    </h3>
+                    <form onSubmit={handleCrearMaquinaTejido} className="space-y-3 text-xs">
                       <div>
-                        <label className="text-xs font-semibold text-secondary font-sans">Pares / Máquina</label>
+                        <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Código Identificador</label>
                         <input
-                          type="number"
-                          value={tejidoForm.cantidad}
-                          onChange={(e) => setTejidoForm({ ...tejidoForm, cantidad: parseInt(e.target.value) || 0 })}
-                          className="w-full mt-1 p-2 border border-outline-variant bg-surface rounded-lg text-xs font-mono font-bold"
-                          min="1"
+                          type="text"
+                          required
+                          value={nuevaMaquinaForm.id}
+                          onChange={(e) => setNuevaMaquinaForm({ ...nuevaMaquinaForm, id: e.target.value })}
+                          className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-mono font-bold"
+                          placeholder="Ej. A-03, V-03, AZ-03"
                         />
                       </div>
-
-                      {/* Live Calculation Preview Card */}
-                      {(() => {
-                        const totalMaquinas = tejidoForm.maquinas_seleccionadas.length;
-                        const itemsValidados = tejidoForm.hilos.filter(item => item.hilo_id !== '');
-                        
-                        let esTodoSuficiente = true;
-                        const desgloseHilos = itemsValidados.map(item => {
-                          const hiloSel = backendState.inventario_hilo.find(h => h.id === parseInt(item.hilo_id));
-                          const cajasTotal = totalMaquinas * (item.cajas_por_maquina || 1);
-                          const stockCajas = hiloSel ? (hiloSel.stock_cajas || 0) : 0;
-                          const suficiente = stockCajas >= cajasTotal;
-                          if (!suficiente) esTodoSuficiente = false;
-                          
-                          return {
-                            nombre: hiloSel ? `${hiloSel.material} ${hiloSel.color}` : `Material ID ${item.hilo_id}`,
-                            cajasTotal,
-                            stockCajas,
-                            suficiente
-                          };
-                        });
-
-                        const totalCajasGlobal = desgloseHilos.reduce((acc, h) => acc + h.cajasTotal, 0);
-
-                        return (
-                          <div className={`p-3 rounded-lg border text-xs space-y-2 ${
-                            totalCajasGlobal === 0 ? 'bg-surface-container border-outline-variant' :
-                            esTodoSuficiente ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900'
-                          }`}>
-                            <div className="flex justify-between items-center font-bold border-b border-outline-variant/30 pb-1.5">
-                              <span>Total Cajas Requeridas:</span>
-                              <span className="font-mono text-sm">{totalCajasGlobal} cajas</span>
-                            </div>
-                            
-                            {desgloseHilos.map((h, i) => (
-                              <div key={i} className="text-[10px] space-y-0.5">
-                                <div className="flex justify-between items-center font-semibold">
-                                  <span>• {h.nombre}:</span>
-                                  <span>{h.cajasTotal} cajas</span>
-                                </div>
-                                <p className="opacity-80">
-                                  {totalMaquinas} máq × {h.cajasTotal / (totalMaquinas || 1)} caja(s) = {h.cajasTotal} cajas req. (Disp: {h.stockCajas} cajas)
-                                </p>
-                              </div>
-                            ))}
-
-                            {itemsValidados.length > 0 && (
-                              <p className={`text-[10px] font-bold pt-1 border-t border-outline-variant/20 ${esTodoSuficiente ? 'text-emerald-700' : 'text-rose-700'}`}>
-                                {esTodoSuficiente
-                                  ? `✅ Todo en stock (${totalMaquinas} máquinas listas)`
-                                  : `⚠️ Stock insuficiente en uno o más materiales cargados`}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })()}
-
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Marca de la Máquina</label>
+                          <select
+                            value={nuevaMaquinaForm.marca}
+                            onChange={(e) => setNuevaMaquinaForm({ ...nuevaMaquinaForm, marca: e.target.value })}
+                            className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-semibold"
+                          >
+                            <option value="angui">Angui</option>
+                            <option value="chinas verdes">Chinas Verdes</option>
+                            <option value="chinas azules">Chinas Azules</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Color / Distintivo</label>
+                          <input
+                            type="text"
+                            value={nuevaMaquinaForm.color}
+                            onChange={(e) => setNuevaMaquinaForm({ ...nuevaMaquinaForm, color: e.target.value })}
+                            className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-semibold"
+                            placeholder="Ej. Verde Oscuro"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Características Visibles</label>
+                        <input
+                          type="text"
+                          value={nuevaMaquinaForm.caracteristicas}
+                          onChange={(e) => setNuevaMaquinaForm({ ...nuevaMaquinaForm, caracteristicas: e.target.value })}
+                          className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-medium"
+                          placeholder="Ej. 144 agujas, alta velocidad"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Asignar Encargado</label>
+                        <select
+                          value={nuevaMaquinaForm.encargado_id}
+                          onChange={(e) => setNuevaMaquinaForm({ ...nuevaMaquinaForm, encargado_id: e.target.value })}
+                          className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs"
+                        >
+                          <option value="">-- Sin Encargado --</option>
+                          {backendState.operarios.map(o => (
+                            <option key={o.id} value={o.id}>{o.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
                       <button
                         type="submit"
-                        className="w-full bg-primary text-on-primary py-2.5 rounded-lg font-bold hover:bg-primary-container transition text-xs flex justify-center items-center gap-2 shadow-sm"
+                        className="w-full py-2 bg-primary text-on-primary rounded-xl font-bold shadow-md hover:bg-primary-container transition active:scale-95 text-xs flex justify-center items-center gap-1.5 mt-2"
                       >
-                        <span className="material-symbols-outlined text-sm">play_arrow</span>
-                        Iniciar Tejido
+                        <span className="material-symbols-outlined text-sm">save</span>
+                        Guardar Máquina
                       </button>
                     </form>
-                  </div>
+                  </section>
 
-                  {/* Stock Insuficiente Warning */}
-                  {(() => {
-                    const isLow = backendState.inventario_hilo.some(h => h.stock_kg < h.umbral_minimo);
-                    if (isLow) {
-                      return (
-                        <div className="bg-rose-50 border border-rose-300 p-4 rounded-xl text-rose-800 text-xs font-semibold space-y-2">
-                          <h4 className="flex items-center gap-1 text-sm font-bold">
-                            <span className="material-symbols-outlined text-rose-600 text-[18px]">warning</span> Stock Insuficiente
-                          </h4>
-                          <p>
-                            Alerta: El stock de bobinas de hilo de algunos colores clave está por debajo del umbral mínimo de seguridad. Verifique existencias antes de encender más máquinas de la línea.
-                          </p>
+                  {/* Módulo de Volteado Unitario */}
+                  <section className="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm space-y-4">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-secondary flex items-center gap-1.5 border-b border-outline-variant pb-2">
+                      <span className="material-symbols-outlined text-sm">rotate_right</span>
+                      Registrar Volteado Unitario
+                    </h3>
+                    <form onSubmit={handleRegistrarVolteadoUnitario} className="space-y-3 text-xs">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Operario</label>
+                          <select
+                            required
+                            value={volteadoForm.operario_id}
+                            onChange={(e) => setVolteadoForm({ ...volteadoForm, operario_id: e.target.value })}
+                            className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs"
+                          >
+                            <option value="">-- Seleccionar --</option>
+                            {backendState.operarios.map(o => (
+                              <option key={o.id} value={o.id}>{o.nombre}</option>
+                            ))}
+                          </select>
                         </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                        <div>
+                          <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Docenas Volteadas</label>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            value={volteadoForm.docenas || ''}
+                            onChange={(e) => setVolteadoForm({ ...volteadoForm, docenas: parseInt(e.target.value) || 0 })}
+                            className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs font-mono font-bold"
+                            placeholder="Docenas"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-secondary uppercase mb-1">Máquina de Origen (Opcional)</label>
+                        <select
+                          value={volteadoForm.maquina_id}
+                          onChange={(e) => setVolteadoForm({ ...volteadoForm, maquina_id: e.target.value })}
+                          className="w-full p-2 border border-outline-variant bg-surface rounded-lg text-xs"
+                        >
+                          <option value="">-- Ninguna --</option>
+                          {backendState.maquinas.filter(m => m.tipo === 'tejido').map(m => (
+                            <option key={m.id} value={m.id}>{m.id} ({m.marca})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full py-2 bg-secondary text-white rounded-xl font-bold shadow-md hover:bg-secondary/90 transition active:scale-95 text-xs flex justify-center items-center gap-1.5 mt-2"
+                      >
+                        <span className="material-symbols-outlined text-sm">check</span>
+                        Registrar Volteado
+                      </button>
+                    </form>
+
+                    {/* Historial rápido de volteados */}
+                    {registroVolteadoList.length > 0 && (
+                      <div className="pt-3 border-t border-outline-variant max-h-[150px] overflow-y-auto space-y-2">
+                        <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">Últimos Registros</p>
+                        {registroVolteadoList.map((r, i) => (
+                          <div key={i} className="flex justify-between items-center text-[11px] p-2 bg-surface rounded-lg border border-outline-variant/60 font-sans">
+                            <div>
+                              <p className="font-bold text-on-surface">{r.operario_nombre}</p>
+                              <p className="text-[9px] text-on-surface-variant font-medium">Máq: {r.maquina_id} | {r.fecha}</p>
+                            </div>
+                            <span className="bg-primary/10 text-primary font-mono font-black px-2 py-0.5 rounded">
+                              {r.docenas} doc.
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
                 </div>
+
+                {/* Right: Máquinas por Marcas con Registro Rápido de Producción (col-span-8) */}
+                <div className="lg:col-span-8 space-y-6">
+                  
+                  {['angui', 'chinas verdes', 'chinas azules'].map(marcaKey => {
+                    const maqFiltradas = backendState.maquinas.filter(m => m.tipo === 'tejido' && m.marca === marcaKey);
+                    return (
+                      <section key={marcaKey} className="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm space-y-4">
+                        <div className="flex justify-between items-center border-b border-outline-variant pb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-primary text-xl">factory</span>
+                            <h3 className="font-extrabold text-sm uppercase tracking-wider text-on-surface">
+                              Máquinas {marcaKey}
+                            </h3>
+                          </div>
+                          <span className="bg-primary/5 text-primary text-[10px] font-black px-3 py-1 rounded-full uppercase font-mono">
+                            {maqFiltradas.length} Máquina{maqFiltradas.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+
+                        {maqFiltradas.length === 0 ? (
+                          <p className="text-xs text-on-surface-variant italic py-2">No hay máquinas registradas en esta marca. Créalas en el panel lateral.</p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {maqFiltradas.map(m => {
+                              const encargado = backendState.operarios.find(o => o.id === m.encargado_id);
+                              const prodActual = produccionRegistro[m.id] || 0;
+                              return (
+                                <div key={m.id} className="border border-outline-variant rounded-xl p-3.5 bg-surface-container-lowest flex flex-col justify-between hover:shadow-md transition-all gap-3">
+                                  
+                                  {/* Info máquina */}
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <p className="font-mono font-black text-sm text-primary">{m.id}</p>
+                                      <p className="text-[10px] text-on-surface-variant font-bold uppercase mt-0.5">
+                                        {encargado ? encargado.nombre : 'Sin operario'}
+                                      </p>
+                                    </div>
+                                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                      {m.color || 'Sin color'}
+                                    </span>
+                                  </div>
+
+                                  {/* Características */}
+                                  {m.caracteristicas && (
+                                    <p className="text-[10px] text-on-surface-variant font-medium line-clamp-2">
+                                      {m.caracteristicas}
+                                    </p>
+                                  )}
+
+                                  {/* Formulario rápido de producción de docenas */}
+                                  <div className="border-t border-outline-variant/60 pt-2.5 flex items-center justify-between gap-2">
+                                    <span className="text-[10px] font-extrabold text-secondary uppercase">Prod. Docenas:</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      disabled={!isTurnoCorriendo}
+                                      value={prodActual || ''}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value) || 0;
+                                        setProduccionRegistro(prev => ({
+                                          ...prev,
+                                          [m.id]: val
+                                        }));
+                                      }}
+                                      className={`w-20 p-1 border rounded text-center font-mono font-black text-xs ${
+                                        !isTurnoCorriendo
+                                          ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                                          : 'bg-white border-outline-variant text-primary focus:ring-1 focus:ring-primary outline-none'
+                                      }`}
+                                      placeholder="0"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </section>
+                    );
+                  })}
+                </div>
+
               </div>
             </div>
           )}
